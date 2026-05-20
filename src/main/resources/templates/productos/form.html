@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${modo == 'crear' ? 'Crear' : 'Editar'} + ' producto'">Producto</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    form { max-width: 560px; }
+    .field { margin-bottom: 12px; }
+    label { display: block; margin-bottom: 4px; font-weight: 600; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ddd; }
+    .errors { color: #a1121a; font-size: 13px; margin-top: 4px; }
+    .actions { display: flex; gap: 8px; margin-top: 16px; }
+    button, .btn { padding: 8px 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    .btn.primary { background: #333; color: #fff; border-color: #333; }
+  </style>
+</head>
+<body>
+
+<h1 th:text="${modo == 'crear' ? 'Crear producto' : 'Editar producto'}">Producto</h1>
+
+<form th:action="${modo == 'crear'} ? @{/productos/crear} : @{'/productos/' + ${producto.id} + '/editar'}"
+      th:object="${producto}" method="post">
+
+  <div class="field" th:if="${producto.id != null}">
+    <label>ID</label>
+    <input type="text" th:field="*{id}" readonly>
+  </div>
+
+  <div class="field">
+    <label>Nombre</label>
+    <input type="text" th:field="*{nombre}" placeholder="Ej. Teclado Mecánico">
+    <div class="errors" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">Nombre inválido</div>
+  </div>
+
+  <div class="field">
+    <label>Precio</label>
+    <input type="number" step="0.01" th:field="*{precio}" placeholder="0.00">
+    <div class="errors" th:if="${#fields.hasErrors('precio')}" th:errors="*{precio}">Precio inválido</div>
+  </div>
+
+  <div class="field">
+    <label>Stock</label>
+    <input type="number" step="1" th:field="*{stock}" placeholder="0">
+    <div class="errors" th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}">Stock inválido</div>
+  </div>
+
+  <div class="field">
+    <label>Categoría</label>
+    <input type="text" th:field="*{categoria}" placeholder="Ej. perifericos">
+    <div class="errors" th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}">Categoría inválida</div>
+  </div>
+
+  <div class="field">
+    <label>Activo</label>
+    <input type="checkbox" th:field="*{activo}">
+  </div>
+
+  <div class="actions">
+    <button type="submit" class="btn primary" th:text="${modo == 'crear' ? 'Crear' : 'Guardar'}">Guardar</button>
+    <a class="btn" th:href="@{/productos}">Volver</a>
+  </div>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+### Listar todos los productos
+GET http://localhost:8080/api/productos
+Accept: application/json
+
+### Listar productos (paginado, filtro opcional)
+GET http://localhost:8080/api/productos?nombre=tecla&page=0&size=5&sort=precio,desc
+Accept: application/json
+###
+
+### Obtener producto por id
+GET http://localhost:8080/api/productos/4
+Accept: application/json
+
+###
+
+### Crear producto
+POST http://localhost:8080/api/productos
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Webcam HD",
+  "precio": 799.00,
+  "stock": 25,
+  "categoria": "perifericos",
+  "activo": true
+}
+
+###
+
+### Actualizar producto (id=1)
+PUT http://localhost:8080/api/productos/1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Teclado Mecánico RGB",
+  "precio": 999.90,
+  "stock": 60,
+  "categoria": "perifericos",
+  "activo": true
+}
+
+###
+
+### Eliminar producto (id=1)
+DELETE http://localhost:8080/api/productos/4
+Accept: application/json
