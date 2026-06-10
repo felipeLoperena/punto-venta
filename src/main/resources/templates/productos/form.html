@@ -1,66 +1,131 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title th:text="${modo == 'crear' ? 'Crear' : 'Editar'} + ' producto'">Producto</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
-    form { max-width: 560px; }
-    .field { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 4px; font-weight: 600; }
-    input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ddd; }
-    .errors { color: #a1121a; font-size: 13px; margin-top: 4px; }
-    .actions { display: flex; gap: 8px; margin-top: 16px; }
-    button, .btn { padding: 8px 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-    .btn.primary { background: #333; color: #fff; border-color: #333; }
-  </style>
+  <title th:text="${modo == 'crear' ? 'Crear producto' : 'Editar producto'}">Producto</title>
 </head>
+
 <body>
 
-<h1 th:text="${modo == 'crear' ? 'Crear producto' : 'Editar producto'}">Producto</h1>
+  <!-- ── Breadcrumb ─────────────────────────────── -->
+  <th:block layout:fragment="breadcrumb">
+    Inventario &rsaquo;
+    <a th:href="@{/productos}" style="color:inherit">Productos</a>
+    &rsaquo;
+    <span th:text="${modo == 'crear' ? 'Nuevo' : 'Editar'}">Nuevo</span>
+  </th:block>
 
-<form th:action="${modo == 'crear'} ? @{/productos/crear} : @{'/productos/' + ${producto.id} + '/editar'}"
-      th:object="${producto}" method="post">
+  <!-- ── Contenido principal ───────────────────── -->
+  <th:block layout:fragment="content">
 
-  <div class="field" th:if="${producto.id != null}">
-    <label>ID</label>
-    <input type="text" th:field="*{id}" readonly>
-  </div>
+    <th:block th:with="activeModule='productos'"></th:block>
 
-  <div class="field">
-    <label>Nombre</label>
-    <input type="text" th:field="*{nombre}" placeholder="Ej. Teclado Mecánico">
-    <div class="errors" th:if="${#fields.hasErrors('nombre')}" th:errors="*{nombre}">Nombre inválido</div>
-  </div>
+    <!-- Cabecera de página -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" th:text="${modo == 'crear' ? 'Nuevo producto' : 'Editar producto'}">
+          Producto
+        </h1>
+        <p class="page-subtitle"
+           th:text="${modo == 'crear'} ? 'Completa los datos para agregar un producto al catálogo.'
+                                       : 'Modifica los campos que necesites actualizar.'">
+        </p>
+      </div>
+    </div>
 
-  <div class="field">
-    <label>Precio</label>
-    <input type="number" step="0.01" th:field="*{precio}" placeholder="0.00">
-    <div class="errors" th:if="${#fields.hasErrors('precio')}" th:errors="*{precio}">Precio inválido</div>
-  </div>
+    <!-- Formulario -->
+    <div class="form-card">
+      <form th:action="${modo == 'crear'} ? @{/productos/crear} : @{'/productos/' + ${producto.id} + '/editar'}"
+            th:object="${producto}"
+            method="post"
+            novalidate>
 
-  <div class="field">
-    <label>Stock</label>
-    <input type="number" step="1" th:field="*{stock}" placeholder="0">
-    <div class="errors" th:if="${#fields.hasErrors('stock')}" th:errors="*{stock}">Stock inválido</div>
-  </div>
+        <div class="form-grid">
 
-  <div class="field">
-    <label>Categoría</label>
-    <input type="text" th:field="*{categoria}" placeholder="Ej. perifericos">
-    <div class="errors" th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}">Categoría inválida</div>
-  </div>
+          <!-- ID (solo en edición) -->
+          <div class="form-group" th:if="${producto.id != null}">
+            <label class="form-label">ID</label>
+            <input class="form-control" type="text" th:field="*{id}" readonly
+                   style="background:var(--bg);color:var(--text-muted);cursor:default"/>
+          </div>
 
-  <div class="field">
-    <label>Activo</label>
-    <input type="checkbox" th:field="*{activo}">
-  </div>
+          <!-- Nombre -->
+          <div class="form-group full">
+            <label class="form-label" for="nombre">Nombre</label>
+            <input class="form-control" id="nombre" type="text"
+                   th:field="*{nombre}"
+                   placeholder="Ej. Teclado Mecánico"/>
+            <div class="form-error" th:if="${#fields.hasErrors('nombre')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{nombre}">Nombre inválido</span>
+            </div>
+          </div>
 
-  <div class="actions">
-    <button type="submit" class="btn primary" th:text="${modo == 'crear' ? 'Crear' : 'Guardar'}">Guardar</button>
-    <a class="btn" th:href="@{/productos}">Volver</a>
-  </div>
-</form>
+          <!-- Precio -->
+          <div class="form-group">
+            <label class="form-label" for="precio">Precio</label>
+            <input class="form-control" id="precio" type="number"
+                   step="0.01" min="0"
+                   th:field="*{precio}"
+                   placeholder="0.00"/>
+            <div class="form-error" th:if="${#fields.hasErrors('precio')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{precio}">Precio inválido</span>
+            </div>
+          </div>
 
+          <!-- Stock -->
+          <div class="form-group">
+            <label class="form-label" for="stock">Stock</label>
+            <input class="form-control" id="stock" type="number"
+                   step="1" min="0"
+                   th:field="*{stock}"
+                   placeholder="0"/>
+            <div class="form-error" th:if="${#fields.hasErrors('stock')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{stock}">Stock inválido</span>
+            </div>
+          </div>
+
+          <!-- Categoría -->
+          <div class="form-group full">
+            <label class="form-label" for="categoria">Categoría</label>
+            <input class="form-control" id="categoria" type="text"
+                   th:field="*{categoria}"
+                   placeholder="Ej. perifericos"/>
+            <div class="form-error" th:if="${#fields.hasErrors('categoria')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{categoria}">Categoría inválida</span>
+            </div>
+          </div>
+
+          <!-- Activo -->
+          <div class="form-group full" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="activo" th:field="*{activo}"
+                   style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
+            <label for="activo" style="font-size:13px;font-weight:500;cursor:pointer;margin:0">
+              Producto activo
+            </label>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <!-- Acciones -->
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
+            <i class="ti ti-device-floppy" aria-hidden="true"></i>
+            <span th:text="${modo == 'crear' ? 'Crear producto' : 'Guardar cambios'}">Guardar</span>
+          </button>
+          <a class="btn-secondary" th:href="@{/productos}">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver
+          </a>
+        </div>
+
+      </form>
+    </div>
+
+  </th:block>
 </body>
 </html>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title layout:title-pattern="$CONTENT_TITLE — Truman POS">Truman POS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --amber:        #D4A843;
+      --amber-dark:   #BA8F2E;
+      --amber-light:  #FDF3DC;
+      --amber-text:   #854F0B;
+      --bg:           #F5F0E8;
+      --surface:      #FFFFFF;
+      --border:       #E4DDD0;
+      --text:         #1A1A2E;
+      --text-muted:   #6B7280;
+      --text-hint:    #9CA3AF;
+      --danger:       #993C1D;
+      --danger-bg:    #FAECE7;
+      --danger-border:#F0997B;
+      --success-bg:   #EAF3DE;
+      --success-text: #3B6D11;
+      --success-dot:  #639922;
+      --stock-low:    #993C1D;
+      --radius-sm:    6px;
+      --radius-md:    8px;
+      --radius-lg:    12px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── SIDEBAR ─────────────────────────────────────────────── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+
+    .sidebar-brand {
+      padding: 18px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .brand-icon i { color: #fff; font-size: 16px; }
+
+    .brand-name  { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
+    .brand-sub   { font-size: 11px; color: var(--text-muted); }
+
+    .sidebar-nav { padding: 12px 8px; flex: 1; overflow-y: auto; }
+
+    .nav-section {
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .7px; text-transform: uppercase;
+      color: var(--text-hint);
+      padding: 10px 8px 4px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 8px;
+      border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 400;
+      color: var(--text-muted);
+      margin-bottom: 1px;
+      transition: background .12s, color .12s;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active {
+      background: var(--amber-light);
+      color: var(--amber-text);
+      font-weight: 500;
+    }
+    .nav-item.active i { color: var(--amber); }
+    .nav-item i { font-size: 16px; width: 18px; text-align: center; }
+
+    .nav-badge {
+      margin-left: auto;
+      font-size: 10px; font-weight: 600;
+      background: var(--bg); color: var(--text-muted);
+      padding: 1px 6px; border-radius: 10px;
+    }
+
+    .sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .user-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .user-name { font-size: 12px; font-weight: 500; }
+    .user-role { font-size: 11px; color: var(--text-muted); }
+
+    /* ─── MAIN WRAPPER ────────────────────────────────────────── */
+    .main-wrapper {
+      margin-left: 220px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ─── TOPBAR ──────────────────────────────────────────────── */
+    .topbar {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .breadcrumb { font-size: 12px; color: var(--text-muted); }
+    .breadcrumb span { color: var(--text); font-weight: 500; }
+
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: background .12s;
+    }
+    .icon-btn:hover { background: var(--bg); }
+    .icon-btn i { font-size: 16px; }
+
+    /* ─── PAGE CONTENT ────────────────────────────────────────── */
+    .page-content { padding: 24px 28px; flex: 1; }
+
+    .page-header {
+      display: flex; align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ─── BUTTONS ─────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: var(--amber); color: #fff;
+      border: none; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: background .12s;
+    }
+    .btn-primary:hover { background: var(--amber-dark); }
+    .btn-primary i { font-size: 15px; }
+
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: var(--surface); color: var(--text);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: background .12s;
+    }
+    .btn-secondary:hover { background: var(--bg); }
+
+    /* ─── STATS CARDS ─────────────────────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+    }
+    .stat-label {
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--text-muted);
+      display: flex; align-items: center; gap: 5px;
+      margin-bottom: 6px;
+    }
+    .stat-label i { font-size: 13px; }
+    .stat-value { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; }
+    .stat-hint  { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    /* ─── TOOLBAR ─────────────────────────────────────────────── */
+    .toolbar {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .search-box {
+      display: flex; align-items: center; gap: 7px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 7px 10px;
+      background: var(--surface);
+      flex: 1; max-width: 280px;
+    }
+    .search-box i { font-size: 15px; color: var(--text-hint); }
+    .search-box input {
+      border: none; background: none; outline: none;
+      font-size: 13px; color: var(--text);
+      font-family: inherit; width: 100%;
+    }
+    .search-box input::placeholder { color: var(--text-hint); }
+
+    .filter-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+      font-size: 13px; color: var(--text-muted);
+      font-family: inherit; cursor: pointer;
+      transition: background .12s;
+    }
+    .filter-btn:hover { background: var(--bg); }
+    .filter-btn i { font-size: 14px; }
+
+    .result-count { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+
+    /* ─── TABLE ───────────────────────────────────────────────── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    .data-table thead tr { border-bottom: 1px solid var(--border); }
+    .data-table thead th {
+      padding: 10px 16px; text-align: left;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--text-muted);
+    }
+
+    .data-table tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    .data-table tbody tr:last-child { border-bottom: none; }
+    .data-table tbody tr:hover { background: var(--bg); }
+    .data-table td { padding: 11px 16px; }
+
+    .cell-primary   { font-weight: 500; }
+    .cell-secondary { font-size: 11px; color: var(--text-hint); margin-top: 1px; }
+    .cell-number    { font-variant-numeric: tabular-nums; font-weight: 500; }
+    .cell-low       { color: var(--stock-low); font-weight: 500; }
+
+    /* ─── BADGES ──────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 500;
+    }
+    .badge::before {
+      content: ''; width: 5px; height: 5px;
+      border-radius: 50%; display: block;
+    }
+    .badge-active  { background: var(--success-bg); color: var(--success-text); }
+    .badge-active::before { background: var(--success-dot); }
+    .badge-inactive { background: var(--bg); color: var(--text-muted); }
+    .badge-inactive::before { background: var(--text-hint); }
+
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 500;
+      background: var(--bg); color: var(--text-muted);
+    }
+
+    /* ─── ACTION BUTTONS ──────────────────────────────────────── */
+    .row-actions { display: flex; align-items: center; gap: 4px; justify-content: flex-end; }
+
+    .action-btn {
+      width: 28px; height: 28px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted);
+      transition: background .12s, color .12s, border-color .12s;
+    }
+    .action-btn:hover { background: var(--bg); color: var(--text); }
+    .action-btn.danger:hover {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border-color: var(--danger-border);
+    }
+    .action-btn i { font-size: 14px; }
+
+    /* ─── PAGINATION ──────────────────────────────────────────── */
+    .pagination-bar {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .pag-info  { font-size: 12px; color: var(--text-muted); }
+    .pag-btns  { display: flex; gap: 4px; }
+    .pag-btn {
+      min-width: 28px; height: 28px; padding: 0 8px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: none; font-size: 12px; font-weight: 500;
+      cursor: pointer; color: var(--text-muted);
+      font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+      text-decoration: none; transition: background .12s;
+    }
+    .pag-btn:hover:not(.pag-active) { background: var(--bg); }
+    .pag-btn.pag-active, a.pag-btn.pag-active {
+      background: var(--amber); color: #fff; border-color: var(--amber);
+    }
+    .pag-btn.disabled { pointer-events: none; opacity: .4; }
+
+    /* ─── FORM ────────────────────────────────────────────────── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px 28px;
+      max-width: 600px;
+    }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label {
+      display: block; margin-bottom: 5px;
+      font-size: 12px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .4px;
+      color: var(--text-muted);
+    }
+    .form-control {
+      width: 100%; padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 13px; color: var(--text);
+      font-family: inherit; background: var(--surface);
+      transition: border-color .12s, box-shadow .12s;
+      outline: none;
+    }
+    .form-control:focus {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 3px rgba(212,168,67,.15);
+    }
+    .form-error {
+      margin-top: 4px; font-size: 12px;
+      color: var(--danger);
+      display: flex; align-items: center; gap: 4px;
+    }
+    .form-error i { font-size: 13px; }
+    .form-actions { display: flex; gap: 8px; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+
+    /* ─── FLASH MESSAGES ──────────────────────────────────────── */
+    .flash-ok {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 16px; padding: 10px 14px;
+      background: var(--success-bg); color: var(--success-text);
+      border: 1px solid #C0DD97; border-radius: var(--radius-md);
+      font-size: 13px;
+    }
+    .flash-ok i { font-size: 15px; }
+
+    /* ─── EMPTY STATE ─────────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state i { font-size: 36px; color: var(--text-hint); margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+  </style>
+
+  <!-- Slot para estilos adicionales por módulo -->
+  <th:block layout:fragment="head-extra"></th:block>
+</head>
+
+<body>
+
+  <!-- ════════════════ SIDEBAR ════════════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="ti ti-beer" aria-hidden="true"></i></div>
+      <div>
+        <div class="brand-name">Truman POS</div>
+        <div class="brand-sub">Cervecería</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Navegación principal">
+      <div class="nav-section">Principal</div>
+      <a th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
+      </a>
+      <a th:href="@{/ventas}" th:classappend="${activeModule == 'ventas'} ? ' active'" class="nav-item">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i> Ventas
+      </a>
+
+      <div class="nav-section">Inventario</div>
+      <a th:href="@{/productos}" th:classappend="${activeModule == 'productos'} ? ' active'" class="nav-item">
+        <i class="ti ti-package" aria-hidden="true"></i> Productos
+      </a>
+      <a th:href="@{/categorias}" th:classappend="${activeModule == 'categorias'} ? ' active'" class="nav-item">
+        <i class="ti ti-category" aria-hidden="true"></i> Categorías
+      </a>
+      <a th:href="@{/proveedores}" th:classappend="${activeModule == 'proveedores'} ? ' active'" class="nav-item">
+        <i class="ti ti-truck" aria-hidden="true"></i> Proveedores
+      </a>
+
+      <div class="nav-section">Administración</div>
+      <a th:href="@{/clientes}" th:classappend="${activeModule == 'clientes'} ? ' active'" class="nav-item">
+        <i class="ti ti-users" aria-hidden="true"></i> Clientes
+      </a>
+      <a th:href="@{/reportes}" th:classappend="${activeModule == 'reportes'} ? ' active'" class="nav-item">
+        <i class="ti ti-chart-bar" aria-hidden="true"></i> Reportes
+      </a>
+      <a th:href="@{/configuracion}" th:classappend="${activeModule == 'configuracion'} ? ' active'" class="nav-item">
+        <i class="ti ti-settings" aria-hidden="true"></i> Configuración
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar">FL</div>
+      <div>
+        <div class="user-name">Felipe L.</div>
+        <div class="user-role">Administrador</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ════════════════ MAIN ════════════════ -->
+  <div class="main-wrapper">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="breadcrumb" layout:fragment="breadcrumb">
+        <span>Inicio</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" title="Notificaciones" aria-label="Notificaciones">
+          <i class="ti ti-bell" aria-hidden="true"></i>
+        </button>
+        <button class="icon-btn" title="Ayuda" aria-label="Ayuda">
+          <i class="ti ti-help" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Contenido del módulo (slot principal) -->
+    <main class="page-content" layout:fragment="content">
+      <!-- Cada vista inyecta aquí su contenido -->
+    </main>
+
+  </div>
+
+</body>
+</html>

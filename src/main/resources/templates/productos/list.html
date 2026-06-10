@@ -1,95 +1,169 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="es">
 <head>
-  <meta charset="UTF-8">
   <title>Productos</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 12px; }
-    th, td { border: 1px solid #ddd; padding: 8px 10px; }
-    th { background: #f3f3f3; text-align: left; }
-    .toolbar { display: flex; gap: 8px; align-items: center; }
-    .pagination { display: flex; gap: 6px; margin-top: 12px; }
-    .page-link { padding: 6px 10px; border: 1px solid #ddd; text-decoration: none; color: #333; }
-    .page-link.active { background: #333; color: #fff; }
-    .badge { padding: 2px 6px; border-radius: 6px; font-size: 12px; }
-    .badge.ok { background: #e7f6ed; color: #146c2e; border: 1px solid #c6e8d3; }
-    .flash { margin: 8px 0; padding: 8px 10px; background: #effaf3; border: 1px solid #cdebd8; color: #0e5a27; }
-    form.inline { display: inline; }
-    input[type="text"], select { padding: 6px 8px; }
-    button, .btn { padding: 6px 10px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-    .btn.primary { background: #333; color: #fff; border-color: #333; }
-    .disabled { pointer-events: none; opacity: .5; }
-  </style>
 </head>
+
 <body>
 
-<h1>Productos</h1>
+  <!-- ── Breadcrumb ─────────────────────────────── -->
+  <th:block layout:fragment="breadcrumb">
+    Inventario &rsaquo; <span>Productos</span>
+  </th:block>
 
-<div th:if="${ok}" class="flash" th:text="${ok}"></div>
+  <!-- ── Contenido principal ───────────────────── -->
+  <th:block layout:fragment="content">
 
-<div class="toolbar">
-  <form th:action="@{/productos}" method="get">
-    <input type="text" name="nombre" placeholder="Buscar por nombre" th:value="${nombre}">
-    <input type="hidden" name="page" value="0"/>
-    <input type="hidden" name="size" th:value="${page.size}"/>
-    <button type="submit">Buscar</button>
-  </form>
+    <!-- Variable que activa el ítem del sidebar -->
+    <th:block th:with="activeModule='productos'"></th:block>
 
-  <a class="btn primary" th:href="@{/productos/crear}">+ Nuevo producto</a>
-</div>
+    <!-- Flash de éxito -->
+    <div th:if="${ok}" class="flash-ok">
+      <i class="ti ti-circle-check" aria-hidden="true"></i>
+      <span th:text="${ok}">Operación realizada correctamente.</span>
+    </div>
 
-<table>
-  <thead>
-  <tr>
-    <!-- Columna con toggle de sort -->
-    <th>
-      <a th:href="@{/productos(nombre=${nombre}, page=${page.number}, size=${page.size}, sort=${ 'nombre,' + ( (param.sort != null and #strings.equalsIgnoreCase(param.sort, 'nombre,asc')) ? 'desc' : 'asc') })}">Nombre</a>
-    </th>
-    <th>Precio</th>
-    <th>Stock</th>
-    <th>Categoría</th>
-    <th>Activo</th>
-    <th style="width:160px;">Acciones</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr th:each="p : ${page.content}">
-    <td th:text="${p.nombre}">Nombre</td>
-    <td th:text="${#numbers.formatDecimal(p.precio, 1, 'COMMA', 2, 'POINT')}">0.00</td>
-    <td th:text="${p.stock}">0</td>
-    <td th:text="${p.categoria}">cat</td>
-    <td>
-      <span th:class="${p.activo} ? 'badge ok' : 'badge'" th:text="${p.activo} ? 'Sí' : 'No'">Sí</span>
-    </td>
-    <td>
-      <a class="btn" th:href="@{|/productos/${p.id}/editar|}">Editar</a>
-      <form class="inline" th:action="@{|/productos/${p.id}/eliminar|}" method="post" onsubmit="return confirm('¿Eliminar este producto?');">
-        <button type="submit">Eliminar</button>
+    <!-- Cabecera de página -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Productos</h1>
+        <p class="page-subtitle">Gestión del catálogo de inventario</p>
+      </div>
+      <a class="btn-primary" th:href="@{/productos/crear}">
+        <i class="ti ti-plus" aria-hidden="true"></i> Nuevo producto
+      </a>
+    </div>
+
+    <!-- Toolbar: búsqueda + filtros -->
+    <div class="toolbar">
+      <form th:action="@{/productos}" method="get" style="display:contents">
+        <div class="search-box">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" name="nombre" placeholder="Buscar por nombre…"
+                 th:value="${nombre}" aria-label="Buscar producto"/>
+        </div>
+        <input type="hidden" name="page" value="0"/>
+        <input type="hidden" name="size" th:value="${page.size}"/>
+        <button type="submit" class="filter-btn">
+          <i class="ti ti-search" aria-hidden="true"></i> Buscar
+        </button>
       </form>
-    </td>
-  </tr>
-  <tr th:if="${page.content.isEmpty()}">
-    <td colspan="6">No hay resultados.</td>
-  </tr>
-  </tbody>
-</table>
+      <span class="result-count"
+            th:text="${page.totalElements} + ' ' + (${page.totalElements} == 1 ? 'resultado' : 'resultados')">
+        0 resultados
+      </span>
+    </div>
 
-<!-- Paginación -->
-<div class="pagination" th:if="${page.totalPages > 1}">
-  <!-- Prev -->
-  <a class="page-link" th:classappend="${page.first} ? ' disabled' : ''" th:href="@{/productos(nombre=${nombre}, page=${page.number-1}, size=${page.size}, sort=${param.sort != null ? param.sort : 'nombre,asc'})}">&laquo; Prev</a>
+    <!-- Tabla -->
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>
+              <a th:href="@{/productos(nombre=${nombre},
+                              page=${page.number},
+                              size=${page.size},
+                              sort=${'nombre,' + ((param.sort != null and #strings.equalsIgnoreCase(param.sort,'nombre,asc')) ? 'desc' : 'asc')})}">
+                Nombre <i class="ti ti-arrows-sort" style="font-size:11px;vertical-align:middle" aria-hidden="true"></i>
+              </a>
+            </th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Categoría</th>
+            <th>Estado</th>
+            <th style="text-align:right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${page.content}">
+            <td>
+              <div class="cell-primary" th:text="${p.nombre}">Nombre</div>
+              <div class="cell-secondary" th:text="'#' + ${p.id}">#001</div>
+            </td>
+            <td>
+              <span class="cell-number"
+                    th:text="'$' + ${#numbers.formatDecimal(p.precio, 1, 'COMMA', 2, 'POINT')}">
+                $0.00
+              </span>
+            </td>
+            <td>
+              <span th:class="${p.stock < 10} ? 'cell-low' : 'cell-number'"
+                    th:text="${p.stock < 10} ? ${p.stock} + ' — bajo' : ${p.stock}">
+                0
+              </span>
+            </td>
+            <td>
+              <span class="tag" th:text="${p.categoria}">categoría</span>
+            </td>
+            <td>
+              <span th:class="${p.activo} ? 'badge badge-active' : 'badge badge-inactive'"
+                    th:text="${p.activo} ? 'Activo' : 'Inactivo'">
+                Activo
+              </span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="action-btn" th:href="@{|/productos/${p.id}/editar|}" title="Editar" aria-label="Editar producto">
+                  <i class="ti ti-edit" aria-hidden="true"></i>
+                </a>
+                <form th:action="@{|/productos/${p.id}/eliminar|}" method="post" style="display:inline"
+                      onsubmit="return confirm('¿Eliminar este producto?')">
+                  <button type="submit" class="action-btn danger" title="Eliminar" aria-label="Eliminar producto">
+                    <i class="ti ti-trash" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
 
-  <!-- Números -->
-  <a class="page-link"
-     th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
-     th:classappend="${i == page.number} ? ' active' : ''"
-     th:text="${i + 1}"
-     th:href="@{/productos(nombre=${nombre}, page=${i}, size=${page.size}, sort=${param.sort != null ? param.sort : 'nombre,asc'})}">1</a>
+          <!-- Estado vacío -->
+          <tr th:if="${page.content.isEmpty()}">
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="ti ti-package-off" aria-hidden="true"></i>
+                <p>No se encontraron productos.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-  <!-- Next -->
-  <a class="page-link" th:classappend="${page.last} ? ' disabled' : ''" th:href="@{/productos(nombre=${nombre}, page=${page.number+1}, size=${page.size}, sort=${param.sort != null ? param.sort : 'nombre,asc'})}">Next &raquo;</a>
-</div>
+      <!-- Paginación -->
+      <div class="pagination-bar" th:if="${page.totalPages > 0}">
+        <span class="pag-info"
+              th:text="'Mostrando ' + (${page.number} * ${page.size} + 1)
+                       + '–' + ${#numbers.formatInteger(T(java.lang.Math).min((${page.number}+1)*${page.size}, ${page.totalElements}), 1)}
+                       + ' de ' + ${page.totalElements} + ' productos'">
+          Mostrando 1–10 de 0 productos
+        </span>
+        <div class="pag-btns" th:if="${page.totalPages > 1}">
+          <!-- Prev -->
+          <a class="pag-btn"
+             th:classappend="${page.first} ? ' disabled'"
+             th:href="@{/productos(nombre=${nombre}, page=${page.number-1}, size=${page.size}, sort=${param.sort ?: 'nombre,asc'})}">
+            <i class="ti ti-chevron-left" aria-hidden="true" style="font-size:13px"></i>
+          </a>
+          <!-- Números -->
+          <a class="pag-btn"
+             th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
+             th:classappend="${i == page.number} ? ' pag-active'"
+             th:text="${i + 1}"
+             th:href="@{/productos(nombre=${nombre}, page=${i}, size=${page.size}, sort=${param.sort ?: 'nombre,asc'})}">
+            1
+          </a>
+          <!-- Next -->
+          <a class="pag-btn"
+             th:classappend="${page.last} ? ' disabled'"
+             th:href="@{/productos(nombre=${nombre}, page=${page.number+1}, size=${page.size}, sort=${param.sort ?: 'nombre,asc'})}">
+            <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:13px"></i>
+          </a>
+        </div>
+      </div>
+    </div>
 
+  </th:block>
 </body>
 </html>
