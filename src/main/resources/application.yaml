@@ -8,9 +8,9 @@ spring:
     activate:
       on-profile: local
   datasource:
-    url: jdbc:mysql://localhost:3334/blackhole?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-    username: root
-    password: $P3rroViej0&
+    url: jdbc:mysql://localhost:3306/punto_venta
+    username: jonhouseman
+    password: soothsayer
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
