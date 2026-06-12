@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -427,44 +428,63 @@
     </div>
 
     <nav class="sidebar-nav" aria-label="Navegación principal">
+ 
+      <!-- ── Principal (todos) ── -->
       <div class="nav-section">Principal</div>
       <a th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
         <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
       </a>
-      <a th:href="@{/ventas}" th:classappend="${activeModule == 'ventas'} ? ' active'" class="nav-item">
-        <i class="ti ti-shopping-cart" aria-hidden="true"></i> Ventas
+    
+      <!-- ── Ventas (todos) ── -->
+      <a th:href="@{/ventas/nueva}" th:classappend="${activeModule == 'ventas'} ? ' active'" class="nav-item">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i> Nueva venta
       </a>
-
+      <a th:href="@{/ventas}" th:classappend="${activeModule == 'historial'} ? ' active'" class="nav-item">
+        <i class="ti ti-history" aria-hidden="true"></i> Historial
+      </a>
+    
+      <!-- ── Inventario (todos) ── -->
       <div class="nav-section">Inventario</div>
       <a th:href="@{/productos}" th:classappend="${activeModule == 'productos'} ? ' active'" class="nav-item">
         <i class="ti ti-package" aria-hidden="true"></i> Productos
       </a>
-      <a th:href="@{/categorias}" th:classappend="${activeModule == 'categorias'} ? ' active'" class="nav-item">
-        <i class="ti ti-category" aria-hidden="true"></i> Categorías
-      </a>
-      <a th:href="@{/proveedores}" th:classappend="${activeModule == 'proveedores'} ? ' active'" class="nav-item">
-        <i class="ti ti-truck" aria-hidden="true"></i> Proveedores
-      </a>
-
-      <div class="nav-section">Administración</div>
-      <a th:href="@{/clientes}" th:classappend="${activeModule == 'clientes'} ? ' active'" class="nav-item">
-        <i class="ti ti-users" aria-hidden="true"></i> Clientes
-      </a>
-      <a th:href="@{/reportes}" th:classappend="${activeModule == 'reportes'} ? ' active'" class="nav-item">
-        <i class="ti ti-chart-bar" aria-hidden="true"></i> Reportes
-      </a>
-      <a th:href="@{/configuracion}" th:classappend="${activeModule == 'configuracion'} ? ' active'" class="nav-item">
-        <i class="ti ti-settings" aria-hidden="true"></i> Configuración
-      </a>
+    
+      <!-- ── Solo ADMIN ── -->
+      <div sec:authorize="hasRole('ADMIN')">
+        <div class="nav-section">Administración</div>
+        <a th:href="@{/clientes}" th:classappend="${activeModule == 'clientes'} ? ' active'" class="nav-item">
+          <i class="ti ti-users" aria-hidden="true"></i> Clientes
+        </a>
+        <a th:href="@{/proveedores}" th:classappend="${activeModule == 'proveedores'} ? ' active'" class="nav-item">
+          <i class="ti ti-truck" aria-hidden="true"></i> Proveedores
+        </a>
+        <a th:href="@{/reportes}" th:classappend="${activeModule == 'reportes'} ? ' active'" class="nav-item">
+          <i class="ti ti-chart-bar" aria-hidden="true"></i> Reportes
+        </a>
+        <a th:href="@{/usuarios}" th:classappend="${activeModule == 'usuarios'} ? ' active'" class="nav-item">
+          <i class="ti ti-shield-lock" aria-hidden="true"></i> Usuarios
+        </a>
+      </div>
+    
     </nav>
 
     <div class="sidebar-footer">
-      <div class="user-avatar">FL</div>
+      <div class="user-avatar" sec:authentication="name" 
+          th:text="${#strings.substring(#authentication.name, 0, 2).toUpperCase()}">AD</div>
       <div>
-        <div class="user-name">Felipe L.</div>
-        <div class="user-role">Administrador</div>
+        <div class="user-name" sec:authentication="name">Usuario</div>
+        <div class="user-role"
+            th:text="${#authorization.expression('hasRole(''ADMIN'')') ? 'Administrador' : 'Cajero'}">
+          Rol
+        </div>
       </div>
     </div>
+    <form th:action="@{/logout}" method="post" style="padding:0 8px 12px">
+      <button type="submit" class="nav-item" 
+              style="width:100%;border:none;background:none;cursor:pointer;color:var(--text-muted)">
+        <i class="ti ti-logout" aria-hidden="true"></i> Cerrar sesión
+      </button>
+    </form>
   </aside>
 
   <!-- ════════════════ MAIN ════════════════ -->
