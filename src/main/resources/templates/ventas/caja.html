@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head><title>Nueva venta</title></head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  Ventas &rsaquo; <span>Nueva venta</span>
+</th:block>
+
+<th:block layout:fragment="content">
+<style>
+  .caja-grid{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .panel-title{font-size:14px;font-weight:600}
+  .panel-body{padding:16px 18px}
+
+  /* Buscador productos */
+  .prod-search-wrap{position:relative;margin-bottom:14px}
+  #prodSearch{width:100%;padding:9px 10px 9px 36px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;font-family:inherit;outline:none;background:var(--surface);color:var(--text)}
+  #prodSearch:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(212,168,67,.15)}
+  .prod-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-hint);font-size:16px;pointer-events:none}
+  .prod-list{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface)}
+  .prod-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+  .prod-row:last-child{border-bottom:none}
+  .prod-row:hover{background:var(--bg)}
+  .prod-row.sin-stock{opacity:.45;cursor:not-allowed}
+  .prod-row-name{font-size:13px;font-weight:500}
+  .prod-row-meta{font-size:11px;color:var(--text-muted);margin-top:1px}
+  .prod-row-price{font-size:13px;font-weight:600;color:var(--amber-text);white-space:nowrap;margin-left:12px}
+
+  /* Carrito */
+  #carritoVacio{text-align:center;padding:32px 16px;color:var(--text-muted);font-size:13px}
+  #carritoVacio i{font-size:32px;color:var(--text-hint);display:block;margin-bottom:8px}
+  .cart-item{display:grid;grid-template-columns:1fr auto;gap:6px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .cart-item:last-child{border-bottom:none}
+  .cart-item-name{font-size:13px;font-weight:500}
+  .cart-item-price{font-size:12px;color:var(--text-muted);margin-top:2px}
+  .cart-controls{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+  .qty-btn{width:26px;height:26px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--text)}
+  .qty-btn:hover{background:var(--bg)}
+  .qty-display{min-width:28px;text-align:center;font-size:13px;font-weight:500}
+  .desc-input{width:60px;padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;text-align:center;outline:none;background:var(--surface);color:var(--text)}
+  .desc-input:focus{border-color:var(--amber)}
+  .cart-item-subtotal{font-size:13px;font-weight:600;text-align:right;white-space:nowrap}
+  .remove-btn{background:none;border:none;cursor:pointer;color:var(--text-hint);padding:2px;font-size:15px}
+  .remove-btn:hover{color:var(--danger)}
+
+  /* Resumen */
+  .resumen-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--text-muted)}
+  .resumen-total{display:flex;justify-content:space-between;font-size:18px;font-weight:600;padding-top:10px;border-top:1px solid var(--border);margin-top:4px}
+  .resumen-total span:last-child{color:var(--amber-text)}
+
+  /* Método pago */
+  .metodo-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+  .metodo-btn{padding:10px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--text);transition:all .12s}
+  .metodo-btn:hover{background:var(--bg)}
+  .metodo-btn.selected{background:var(--amber-light);border-color:var(--amber);color:var(--amber-text)}
+  .metodo-btn i{font-size:16px}
+
+  .cliente-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-md);font-size:13px;font-family:inherit;outline:none;background:var(--surface);color:var(--text);margin-bottom:14px}
+  .cliente-input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(212,168,67,.15)}
+
+  .cobrar-btn{width:100%;padding:12px;background:var(--amber);color:#fff;border:none;border-radius:var(--radius-md);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .12s}
+  .cobrar-btn:hover:not(:disabled){background:var(--amber-dark)}
+  .cobrar-btn:disabled{opacity:.5;cursor:not-allowed}
+  .cobrar-btn i{font-size:18px}
+
+  .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;background:var(--bg);color:var(--text-muted)}
+</style>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Nueva venta</h1>
+    <p class="page-subtitle">Agrega productos al carrito y cobra</p>
+  </div>
+  <a class="btn-secondary" th:href="@{/ventas}">
+    <i class="ti ti-history" aria-hidden="true"></i> Historial
+  </a>
+</div>
+
+<div class="caja-grid">
+
+  <!-- ── Panel izquierdo: catálogo ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Catálogo</span>
+      <span id="prodCount" class="tag">0 productos</span>
+    </div>
+    <div class="panel-body">
+      <div class="prod-search-wrap">
+        <i class="ti ti-search prod-search-icon" aria-hidden="true"></i>
+        <input id="prodSearch" type="text" placeholder="Buscar producto por nombre…" autocomplete="off"/>
+      </div>
+      <div class="prod-list" id="prodList">
+        <!-- Se llena con JS desde los datos Thymeleaf -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panel derecho: carrito + cobro ── -->
+  <div>
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-header">
+        <span class="panel-title">Carrito</span>
+        <button onclick="limpiarCarrito()" class="btn-secondary" style="padding:4px 10px;font-size:12px">
+          Limpiar
+        </button>
+      </div>
+      <div class="panel-body" id="carritoBody">
+        <div id="carritoVacio">
+          <i class="ti ti-shopping-cart-off" aria-hidden="true"></i>
+          Agrega productos desde el catálogo
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-body">
+
+        <!-- Cliente (opcional) -->
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);display:block;margin-bottom:5px">
+          Cliente (opcional)
+        </label>
+        <input id="clienteNombre" class="cliente-input" type="text"
+               placeholder="Nombre del cliente…" autocomplete="off"/>
+
+        <!-- Método de pago -->
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);display:block;margin-bottom:5px">
+          Método de pago
+        </label>
+        <div class="metodo-btns">
+          <button class="metodo-btn selected" data-metodo="EFECTIVO" onclick="selMetodo(this)">
+            <i class="ti ti-cash" aria-hidden="true"></i> Efectivo
+          </button>
+          <button class="metodo-btn" data-metodo="TARJETA" onclick="selMetodo(this)">
+            <i class="ti ti-credit-card" aria-hidden="true"></i> Tarjeta
+          </button>
+        </div>
+
+        <!-- Resumen -->
+        <div class="resumen-row">
+          <span>Subtotal</span>
+          <span id="resSubtotal">$0.00</span>
+        </div>
+        <div class="resumen-row">
+          <span>Descuentos</span>
+          <span id="resDescuentos" style="color:var(--success-text)">-$0.00</span>
+        </div>
+        <div class="resumen-total">
+          <span>Total</span>
+          <span id="resTotal">$0.00</span>
+        </div>
+
+        <button id="cobrarBtn" class="cobrar-btn" style="margin-top:16px" onclick="cobrar()" disabled>
+          <i class="ti ti-receipt" aria-hidden="true"></i> Cobrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Datos de productos para JS (Thymeleaf → JS) -->
+<script th:inline="javascript">
+  const PRODUCTOS = /*[[${productos}]]*/ [];
+</script>
+
+<script>
+  // ── Estado ────────────────────────────────────────────────────
+  let carrito = [];   // [{productoId, nombre, precio, cantidad, descuentoPct}]
+  let metodoPago = 'EFECTIVO';
+
+  // ── Renderizar catálogo ───────────────────────────────────────
+  function renderCatalogo(filtro = '') {
+    const lista = document.getElementById('prodList');
+    const filt = filtro.toLowerCase().trim();
+    const prods = filt
+      ? PRODUCTOS.filter(p => p.nombre.toLowerCase().includes(filt))
+      : PRODUCTOS;
+
+    document.getElementById('prodCount').textContent = prods.length + ' productos';
+
+    if (!prods.length) {
+      lista.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">Sin resultados</div>';
+      return;
+    }
+    lista.innerHTML = prods.map(p => `
+      <div class="prod-row ${p.stock <= 0 ? 'sin-stock' : ''}"
+           onclick="${p.stock > 0 ? `agregarAlCarrito(${p.id})` : ''}">
+        <div>
+          <div class="prod-row-name">${p.nombre}</div>
+          <div class="prod-row-meta">${p.categoria} · Stock: ${p.stock}</div>
+        </div>
+        <div class="prod-row-price">$${fmt(p.precio)}</div>
+      </div>`).join('');
+  }
+
+  document.getElementById('prodSearch').addEventListener('input', e => {
+    renderCatalogo(e.target.value);
+  });
+
+  // ── Carrito ───────────────────────────────────────────────────
+  function agregarAlCarrito(productoId) {
+    const prod = PRODUCTOS.find(p => p.id === productoId);
+    if (!prod) return;
+    const existente = carrito.find(i => i.productoId === productoId);
+    if (existente) {
+      if (existente.cantidad < prod.stock) existente.cantidad++;
+    } else {
+      carrito.push({ productoId: prod.id, nombre: prod.nombre,
+                     precio: prod.precio, cantidad: 1, descuentoPct: 0 });
+    }
+    renderCarrito();
+  }
+
+  function cambiarCantidad(productoId, delta) {
+    const item = carrito.find(i => i.productoId === productoId);
+    if (!item) return;
+    const prod = PRODUCTOS.find(p => p.id === productoId);
+    item.cantidad = Math.max(1, Math.min(item.cantidad + delta, prod.stock));
+    renderCarrito();
+  }
+
+  function cambiarDescuento(productoId, val) {
+    const item = carrito.find(i => i.productoId === productoId);
+    if (!item) return;
+    const num = parseFloat(val) || 0;
+    item.descuentoPct = Math.max(0, Math.min(100, num));
+    renderCarrito();
+  }
+
+  function quitarItem(productoId) {
+    carrito = carrito.filter(i => i.productoId !== productoId);
+    renderCarrito();
+  }
+
+  function limpiarCarrito() {
+    carrito = [];
+    renderCarrito();
+  }
+
+  function renderCarrito() {
+    const body = document.getElementById('carritoBody');
+    if (!carrito.length) {
+      body.innerHTML = `<div id="carritoVacio">
+        <i class="ti ti-shopping-cart-off" aria-hidden="true"></i>
+        Agrega productos desde el catálogo</div>`;
+      actualizarResumen();
+      return;
+    }
+    body.innerHTML = carrito.map(item => {
+      const subtotal = item.precio * item.cantidad * (1 - item.descuentoPct / 100);
+      return `
+      <div class="cart-item">
+        <div>
+          <div class="cart-item-name">${item.nombre}</div>
+          <div class="cart-item-price">$${fmt(item.precio)} c/u</div>
+        </div>
+        <div>
+          <div class="cart-controls">
+            <button class="qty-btn" onclick="cambiarCantidad(${item.productoId},-1)">−</button>
+            <span class="qty-display">${item.cantidad}</span>
+            <button class="qty-btn" onclick="cambiarCantidad(${item.productoId},1)">+</button>
+            <input class="desc-input" type="number" min="0" max="100" step="1"
+                   value="${item.descuentoPct}" placeholder="0%"
+                   onchange="cambiarDescuento(${item.productoId}, this.value)"
+                   title="Descuento %"/>
+            <button class="remove-btn" onclick="quitarItem(${item.productoId})" title="Quitar">
+              <i class="ti ti-x" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="cart-item-subtotal">$${fmt(subtotal)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    actualizarResumen();
+  }
+
+  function actualizarResumen() {
+    let bruto = 0, neto = 0;
+    carrito.forEach(i => {
+      bruto += i.precio * i.cantidad;
+      neto  += i.precio * i.cantidad * (1 - i.descuentoPct / 100);
+    });
+    const desc = bruto - neto;
+    document.getElementById('resSubtotal').textContent  = '$' + fmt(bruto);
+    document.getElementById('resDescuentos').textContent = '-$' + fmt(desc);
+    document.getElementById('resTotal').textContent      = '$' + fmt(neto);
+    document.getElementById('cobrarBtn').disabled = carrito.length === 0;
+  }
+
+  // ── Método de pago ────────────────────────────────────────────
+  function selMetodo(btn) {
+    document.querySelectorAll('.metodo-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    metodoPago = btn.dataset.metodo;
+  }
+
+  // ── Cobrar ────────────────────────────────────────────────────
+  async function cobrar() {
+    const btn = document.getElementById('cobrarBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ti ti-loader" aria-hidden="true"></i> Procesando…';
+
+    const payload = {
+      clienteNombre: document.getElementById('clienteNombre').value.trim() || null,
+      metodoPago,
+      items: carrito.map(i => ({
+        productoId:   i.productoId,
+        cantidad:     i.cantidad,
+        descuentoPct: i.descuentoPct
+      }))
+    };
+
+    try {
+      const res  = await fetch('/ventas/nueva', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.ok) {
+        window.location.href = `/ventas/${data.ventaId}/ticket`;
+      } else {
+        alert('Error al procesar la venta: ' + (data.message || 'Error desconocido'));
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-receipt" aria-hidden="true"></i> Cobrar';
+      }
+    } catch (e) {
+      alert('Error de conexión. Intenta de nuevo.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-receipt" aria-hidden="true"></i> Cobrar';
+    }
+  }
+
+  // ── Utilidades ────────────────────────────────────────────────
+  function fmt(n) {
+    return parseFloat(n).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Init
+  renderCatalogo();
+</script>
+</th:block>
+</body>
+</html>

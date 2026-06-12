@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title th:text="'Ticket #' + ${venta.id}">Ticket</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      background: #fff;
+      color: #111;
+      padding: 20px;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .center  { text-align: center; }
+    .bold    { font-weight: bold; }
+    .divider { border: none; border-top: 1px dashed #aaa; margin: 10px 0; }
+    .row     { display: flex; justify-content: space-between; margin: 4px 0; }
+    .total   { font-size: 16px; font-weight: bold; margin-top: 6px; }
+    .footer  { margin-top: 16px; font-size: 11px; text-align: center; color: #555; }
+    .logo    { font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+    .no-print{ margin-top: 24px; text-align: center; }
+
+    @media print {
+      .no-print { display: none; }
+      body { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado -->
+  <div class="center" style="margin-bottom:12px">
+    <div class="logo">TRUMAN POS</div>
+    <div style="font-size:11px;color:#555;margin-top:2px">Modelorama</div>
+  </div>
+
+  <hr class="divider"/>
+
+  <div class="row">
+    <span>Folio:</span>
+    <span class="bold" th:text="'#' + ${venta.id}"></span>
+  </div>
+  <div class="row">
+    <span>Fecha:</span>
+    <span th:text="${#temporals.format(venta.fecha,'dd/MM/yyyy HH:mm')}"></span>
+  </div>
+  <div class="row" th:if="${venta.clienteNombre != null}">
+    <span>Cliente:</span>
+    <span th:text="${venta.clienteNombre}"></span>
+  </div>
+  <div class="row">
+    <span>Pago:</span>
+    <span th:text="${venta.metodoPago.label}"></span>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Ítems -->
+  <div th:each="item : ${venta.items}" style="margin-bottom:6px">
+    <div class="bold" th:text="${item.productoNombre}"></div>
+    <div class="row" style="color:#444;font-size:12px">
+      <span th:text="${item.cantidad} + ' x $' + ${#numbers.formatDecimal(item.precioUnitario,1,'COMMA',2,'POINT')}"></span>
+      <span th:if="${item.descuentoPct > 0}"
+            th:text="'Desc. ' + ${item.descuentoPct} + '%'"></span>
+      <span th:text="'$' + ${#numbers.formatDecimal(item.subtotal,1,'COMMA',2,'POINT')}"></span>
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <div class="row total">
+    <span>TOTAL</span>
+    <span th:text="'$' + ${#numbers.formatDecimal(venta.total,1,'COMMA',2,'POINT')}"></span>
+  </div>
+
+  <hr class="divider"/>
+
+  <div class="footer">
+    ¡Gracias por tu compra!<br/>
+    Conserva este ticket como comprobante.
+  </div>
+
+  <!-- Botón imprimir (no aparece al imprimir) -->
+  <div class="no-print">
+    <button onclick="window.print()"
+            style="padding:10px 24px;background:#D4A843;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600">
+      🖨 Imprimir
+    </button>
+    <a th:href="@{'/ventas/' + ${venta.id}}"
+       style="display:inline-block;margin-left:10px;font-size:13px;color:#6B7280;text-decoration:underline">
+      Ver detalle
+    </a>
+  </div>
+
+</body>
+</html>

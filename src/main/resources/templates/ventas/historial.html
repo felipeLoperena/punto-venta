@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head><title>Historial de ventas</title></head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  Ventas &rsaquo; <span>Historial</span>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Ventas</h1>
+      <p class="page-subtitle">Historial de todas las transacciones</p>
+    </div>
+    <a class="btn-primary" th:href="@{/ventas/nueva}">
+      <i class="ti ti-plus" aria-hidden="true"></i> Nueva venta
+    </a>
+  </div>
+
+  <div class="toolbar">
+    <form th:action="@{/ventas}" method="get" style="display:contents">
+      <div class="search-box">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" name="cliente" placeholder="Buscar por cliente…"
+               th:value="${cliente}" aria-label="Buscar cliente"/>
+      </div>
+      <input type="hidden" name="page" value="0"/>
+      <input type="hidden" name="size" th:value="${page.size}"/>
+      <button type="submit" class="filter-btn">
+        <i class="ti ti-search" aria-hidden="true"></i> Buscar
+      </button>
+    </form>
+    <span class="result-count"
+          th:text="${page.totalElements} + ' ' + (${page.totalElements} == 1 ? 'venta' : 'ventas')">
+    </span>
+  </div>
+
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Productos</th>
+          <th>Método</th>
+          <th>Total</th>
+          <th style="text-align:right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="v : ${page.content}">
+          <td><span class="cell-primary" th:text="'#' + ${v.id}"></span></td>
+          <td>
+            <div class="cell-primary" th:text="${#temporals.format(v.fecha,'dd/MM/yyyy')}"></div>
+            <div class="cell-secondary" th:text="${#temporals.format(v.fecha,'HH:mm')}"></div>
+          </td>
+          <td>
+            <span th:if="${v.clienteNombre != null}" th:text="${v.clienteNombre}" class="cell-primary"></span>
+            <span th:if="${v.clienteNombre == null}" style="color:var(--text-hint);font-size:12px">Sin cliente</span>
+          </td>
+          <td><span class="tag" th:text="${v.items.size()} + ' artículo(s)'"></span></td>
+          <td>
+            <span th:class="${v.metodoPago.name() == 'EFECTIVO'} ? 'badge badge-active' : 'badge badge-inactive'"
+                  th:text="${v.metodoPago.label}"></span>
+          </td>
+          <td>
+            <span class="cell-number"
+                  th:text="'$' + ${#numbers.formatDecimal(v.total,1,'COMMA',2,'POINT')}"></span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a class="action-btn" th:href="@{'/ventas/' + ${v.id}}" title="Ver detalle">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </a>
+              <a class="action-btn" th:href="@{'/ventas/' + ${v.id} + '/ticket'}"
+                 target="_blank" title="Imprimir ticket">
+                <i class="ti ti-printer" aria-hidden="true"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        <tr th:if="${page.content.isEmpty()}">
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="ti ti-receipt-off" aria-hidden="true"></i>
+              <p>No hay ventas registradas aún.</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pagination-bar" th:if="${page.totalPages > 1}">
+      <span class="pag-info"
+            th:text="'Mostrando ' + (${page.number} * ${page.size} + 1)
+                     + '–' + ${#numbers.formatInteger(T(java.lang.Math).min((${page.number}+1)*${page.size}, ${page.totalElements}),1)}
+                     + ' de ' + ${page.totalElements} + ' ventas'">
+      </span>
+      <div class="pag-btns">
+        <a class="pag-btn" th:classappend="${page.first}?' disabled'"
+           th:href="@{/ventas(cliente=${cliente},page=${page.number-1},size=${page.size})}">
+          <i class="ti ti-chevron-left" style="font-size:13px"></i>
+        </a>
+        <a class="pag-btn" th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
+           th:classappend="${i == page.number}?' pag-active'"
+           th:text="${i+1}"
+           th:href="@{/ventas(cliente=${cliente},page=${i},size=${page.size})}">1</a>
+        <a class="pag-btn" th:classappend="${page.last}?' disabled'"
+           th:href="@{/ventas(cliente=${cliente},page=${page.number+1},size=${page.size})}">
+          <i class="ti ti-chevron-right" style="font-size:13px"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head><title>Detalle de venta</title></head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  <a th:href="@{/ventas}" style="color:inherit">Ventas</a> &rsaquo;
+  <span th:text="'Venta #' + ${venta.id}">Detalle</span>
+</th:block>
+
+<th:block layout:fragment="content">
+<style>
+  .detalle-grid{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .panel-header{padding:14px 18px;border-bottom:1px solid var(--border)}
+  .panel-title{font-size:14px;font-weight:600}
+  .panel-body{padding:16px 18px}
+  .info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .info-row:last-child{border-bottom:none}
+  .info-label{color:var(--text-muted);font-weight:500}
+  .total-row{display:flex;justify-content:space-between;font-size:16px;font-weight:600;padding-top:14px;border-top:2px solid var(--border);margin-top:4px}
+  .total-row span:last-child{color:var(--amber-text)}
+</style>
+
+<div class="page-header">
+  <div>
+    <h1 class="page-title" th:text="'Venta #' + ${venta.id}">Venta</h1>
+    <p class="page-subtitle" th:text="${#temporals.format(venta.fecha,'dd/MM/yyyy HH:mm')}"></p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a class="btn-secondary" th:href="@{'/ventas/' + ${venta.id} + '/ticket'}" target="_blank">
+      <i class="ti ti-printer" aria-hidden="true"></i> Imprimir ticket
+    </a>
+    <a class="btn-secondary" th:href="@{/ventas}">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver
+    </a>
+  </div>
+</div>
+
+<div class="detalle-grid">
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th>Precio unit.</th>
+          <th>Desc. %</th>
+          <th>Cantidad</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr th:each="item : ${venta.items}">
+          <td>
+            <div class="cell-primary" th:text="${item.productoNombre}"></div>
+            <div class="cell-secondary" th:text="'ID: ' + ${item.productoId}"></div>
+          </td>
+          <td><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(item.precioUnitario,1,'COMMA',2,'POINT')}"></span></td>
+          <td>
+            <span th:if="${item.descuentoPct > 0}" class="badge badge-active" th:text="${item.descuentoPct} + '%'"></span>
+            <span th:if="${item.descuentoPct == 0}" style="color:var(--text-hint);font-size:12px">—</span>
+          </td>
+          <td th:text="${item.cantidad}">1</td>
+          <td style="text-align:right">
+            <span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(item.subtotal,1,'COMMA',2,'POINT')}"></span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><span class="panel-title">Resumen</span></div>
+    <div class="panel-body">
+      <div class="info-row">
+        <span class="info-label">Cliente</span>
+        <span style="font-weight:500" th:text="${venta.clienteNombre != null ? venta.clienteNombre : 'Sin cliente'}"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Método de pago</span>
+        <span th:class="${venta.metodoPago.name() == 'EFECTIVO'} ? 'badge badge-active' : 'badge badge-inactive'"
+              th:text="${venta.metodoPago.label}"></span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Artículos</span>
+        <span style="font-weight:500" th:text="${venta.items.size()}"></span>
+      </div>
+      <div class="total-row">
+        <span>Total</span>
+        <span th:text="'$' + ${#numbers.formatDecimal(venta.total,1,'COMMA',2,'POINT')}"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</th:block>
+</body>
+</html>
