@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head>
+  <title th:text="${modo == 'crear'} ? 'Nuevo usuario' : 'Editar usuario'">Usuario</title>
+</head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  <a th:href="@{/usuarios}" style="color:inherit">Usuarios</a> &rsaquo;
+  <span th:text="${modo == 'crear'} ? 'Nuevo' : 'Editar'">Nuevo</span>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title"
+          th:text="${modo == 'crear'} ? 'Nuevo usuario' : 'Editar usuario'">Usuario</h1>
+      <p class="page-subtitle"
+         th:text="${modo == 'crear'} ? 'Completa los datos del nuevo usuario.' : 'Modifica los campos que necesites.'"></p>
+    </div>
+  </div>
+
+  <!-- Error de negocio -->
+  <div th:if="${error}" class="flash-ok"
+       style="background:var(--danger-bg);color:var(--danger);border-color:#F0997B;margin-bottom:16px">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+    <span th:text="${error}"></span>
+  </div>
+
+  <div class="form-card">
+    <form th:action="${modo == 'crear'} ? @{/usuarios/crear} : @{'/usuarios/' + ${usuarioForm.id} + '/editar'}"
+          th:object="${usuarioForm}"
+          method="post" novalidate>
+
+      <div class="form-grid">
+
+        <!-- Nombre -->
+        <div class="form-group full">
+          <label class="form-label" for="nombre">Nombre completo</label>
+          <input class="form-control" id="nombre" type="text"
+                 th:field="*{nombre}" placeholder="Ej. Felipe López"/>
+          <div class="form-error" th:if="${#fields.hasErrors('nombre')}">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+            <span th:errors="*{nombre}"></span>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group full">
+          <label class="form-label" for="email">Email (usuario de acceso)</label>
+          <input class="form-control" id="email" type="email"
+                 th:field="*{email}" placeholder="usuario@truman.com"/>
+          <div class="form-error" th:if="${#fields.hasErrors('email')}">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+            <span th:errors="*{email}"></span>
+          </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="form-group full">
+          <label class="form-label" for="password">
+            Contraseña
+            <span th:if="${modo == 'editar'}"
+                  style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-hint)">
+              — dejar vacío para no cambiarla
+            </span>
+          </label>
+          <input class="form-control" id="password" type="password"
+                 th:field="*{password}" placeholder="Mínimo 6 caracteres"
+                 autocomplete="new-password"/>
+          <div class="form-error" th:if="${#fields.hasErrors('password')}">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+            <span th:errors="*{password}"></span>
+          </div>
+        </div>
+
+        <!-- Rol -->
+        <div class="form-group">
+          <label class="form-label" for="rol">Rol</label>
+          <select class="form-control" id="rol" th:field="*{rol}" style="padding-left:10px">
+            <option th:each="r : ${roles}"
+                    th:value="${r}"
+                    th:text="${r.label}">Rol</option>
+          </select>
+          <div class="form-error" th:if="${#fields.hasErrors('rol')}">
+            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+            <span th:errors="*{rol}"></span>
+          </div>
+        </div>
+
+        <!-- Activo -->
+        <div class="form-group" style="display:flex;align-items:center;gap:10px;padding-top:28px">
+          <input type="checkbox" id="activo" th:field="*{activo}"
+                 style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
+          <label for="activo" style="font-size:13px;font-weight:500;cursor:pointer;margin:0">
+            Usuario activo
+          </label>
+        </div>
+
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>
+          <span th:text="${modo == 'crear'} ? 'Crear usuario' : 'Guardar cambios'">Guardar</span>
+        </button>
+        <a class="btn-secondary" th:href="@{/usuarios}">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver
+        </a>
+      </div>
+
+    </form>
+  </div>
+
+</th:block>
+</body>
+</html>
