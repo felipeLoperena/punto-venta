@@ -62,6 +62,11 @@ public class UsuarioPageController {
                         BindingResult result,
                         Model model,
                         RedirectAttributes flash) {
+        if (form.getPassword() == null || form.getPassword().isBlank()) {
+            result.rejectValue("password", "required", "La contraseña es obligatoria");
+        } else if (form.getPassword().length() < 6) {
+            result.rejectValue("password", "size", "Mínimo 6 caracteres");
+        }
         if (result.hasErrors()) {
             model.addAttribute("roles",        Rol.values());
             model.addAttribute("modo",         "crear");
@@ -107,6 +112,10 @@ public class UsuarioPageController {
                          BindingResult result,
                          Model model,
                          RedirectAttributes flash) {
+        String pwd = form.getPassword();
+        if (pwd != null && !pwd.isBlank() && pwd.length() < 6) {
+            result.rejectValue("password", "size", "Mínimo 6 caracteres");
+        }
         if (result.hasErrors()) {
             model.addAttribute("roles",        Rol.values());
             model.addAttribute("modo",         "editar");
@@ -130,8 +139,12 @@ public class UsuarioPageController {
 
     @PostMapping("/usuarios/{id}/toggle")
     public String toggle(@PathVariable Long id, RedirectAttributes flash) {
-        usuarioService.toggleActivo(id);
-        flash.addFlashAttribute("ok", "Estado del usuario actualizado.");
+        try {
+            usuarioService.toggleActivo(id);
+            flash.addFlashAttribute("ok", "Estado del usuario actualizado.");
+        } catch (IllegalArgumentException e) {
+            flash.addFlashAttribute("error", e.getMessage());
+        }
         return "redirect:/usuarios";
     }
 }

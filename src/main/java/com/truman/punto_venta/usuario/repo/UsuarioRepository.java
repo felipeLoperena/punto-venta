@@ -1,5 +1,6 @@
 package com.truman.punto_venta.usuario.repo;
 
+import com.truman.punto_venta.usuario.domain.Rol;
 import com.truman.punto_venta.usuario.domain.Usuario;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,4 +15,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Page<Usuario> findByNombreContainingIgnoreCase(String nombre, Pageable pageable);
 
     boolean existsByEmail(String email);
+
+    long countByRolAndActivoTrue(Rol rol);
 }

@@ -23,12 +23,7 @@ public class UsuarioForm {
     @Size(max = 120, message = "Máximo 120 caracteres")
     private String email;
 
-    /**
-     * En creación es obligatoria.
-     * En edición se deja vacía para no cambiarla,
-     * o se llena para actualizarla.
-     */
-    @Size(min = 6, message = "Mínimo 6 caracteres")
+    // Validación de longitud mínima se hace en el controlador según modo (crear/editar)
     private String password;
 
     @NotNull(message = "El rol es obligatorio")

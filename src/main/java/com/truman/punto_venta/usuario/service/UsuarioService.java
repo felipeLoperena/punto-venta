@@ -1,5 +1,6 @@
 package com.truman.punto_venta.usuario.service;
 
+import com.truman.punto_venta.usuario.domain.Rol;
 import com.truman.punto_venta.usuario.domain.Usuario;
 import com.truman.punto_venta.usuario.repo.UsuarioRepository;
 import com.truman.punto_venta.usuario.web.UsuarioForm;
@@ -90,6 +91,12 @@ public class UsuarioService {
     @Transactional
     public void toggleActivo(Long id) {
         Usuario usuario = obtener(id);
+        if (usuario.isActivo()
+                && usuario.getRol() == Rol.ADMIN
+                && usuarioRepository.countByRolAndActivoTrue(Rol.ADMIN) <= 1) {
+            throw new IllegalArgumentException(
+                    "No se puede desactivar al único administrador activo del sistema.");
+        }
         usuario.setActivo(!usuario.isActivo());
         usuarioRepository.save(usuario);
     }

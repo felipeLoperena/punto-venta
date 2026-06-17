@@ -26,6 +26,11 @@
     <i class="ti ti-circle-check" aria-hidden="true"></i>
     <span th:text="${ok}"></span>
   </div>
+  <div th:if="${error}" class="flash-ok"
+       style="background:var(--danger-bg);color:var(--danger);border-color:#F0997B">
+    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+    <span th:text="${error}"></span>
+  </div>
 
   <!-- Toolbar -->
   <div class="toolbar">

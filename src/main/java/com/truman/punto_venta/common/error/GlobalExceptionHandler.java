@@ -23,4 +23,3 @@ public class GlobalExceptionHandler {
         return Map.of("error", "BAD_REQUEST", "fields", fieldErrors);
     }
 }
-
