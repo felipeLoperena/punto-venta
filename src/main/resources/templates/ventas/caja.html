@@ -165,6 +165,8 @@
 <!-- Datos de productos para JS (Thymeleaf → JS) -->
 <script th:inline="javascript">
   const PRODUCTOS = /*[[${productos}]]*/ [];
+  const CLIENTES  = /*[[${clientes}]]*/ [];
+  attachAutocomplete(document.getElementById('clienteNombre'), CLIENTES);
 </script>
 
 <script>

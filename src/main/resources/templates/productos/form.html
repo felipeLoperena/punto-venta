@@ -94,6 +94,7 @@
             <label class="form-label" for="categoria">Categoría</label>
             <input class="form-control" id="categoria" type="text"
                    th:field="*{categoria}"
+                   autocomplete="off"
                    placeholder="Ej. perifericos"/>
             <div class="form-error" th:if="${#fields.hasErrors('categoria')}">
               <i class="ti ti-alert-circle" aria-hidden="true"></i>
@@ -125,6 +126,11 @@
 
       </form>
     </div>
+
+    <script th:inline="javascript">
+      const CATEGORIAS = /*[[${categorias}]]*/ [];
+      attachAutocomplete(document.getElementById('categoria'), CATEGORIAS);
+    </script>
 
   </th:block>
 </body>

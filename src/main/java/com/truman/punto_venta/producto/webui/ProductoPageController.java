@@ -43,14 +43,20 @@ public class ProductoPageController {
     public String crearForm(Model model) {
         model.addAttribute("producto", new Producto());
         model.addAttribute("modo", "crear");
+        model.addAttribute("categorias", service.categorias());
         return "productos/form";
     }
 
     @PostMapping("/crear")
     public String crear(@ModelAttribute("producto") @Valid Producto producto,
                         BindingResult binding,
+                        Model model,
                         RedirectAttributes ra) {
-        if (binding.hasErrors()) return "productos/form";
+        if (binding.hasErrors()) {
+            model.addAttribute("modo", "crear");
+            model.addAttribute("categorias", service.categorias());
+            return "productos/form";
+        }
         service.crear(producto);
         ra.addFlashAttribute("ok", "Producto creado correctamente.");
         return "redirect:/productos";
@@ -62,6 +68,7 @@ public class ProductoPageController {
         Producto p = service.obtener(id);
         model.addAttribute("producto", p);
         model.addAttribute("modo", "editar");
+        model.addAttribute("categorias", service.categorias());
         return "productos/form";
     }
 
@@ -69,8 +76,13 @@ public class ProductoPageController {
     public String editar(@PathVariable Long id,
                          @ModelAttribute("producto") @Valid Producto producto,
                          BindingResult binding,
+                         Model model,
                          RedirectAttributes ra) {
-        if (binding.hasErrors()) return "productos/form";
+        if (binding.hasErrors()) {
+            model.addAttribute("modo", "editar");
+            model.addAttribute("categorias", service.categorias());
+            return "productos/form";
+        }
         service.actualizar(id, producto);
         ra.addFlashAttribute("ok", "Producto actualizado correctamente.");
         return "redirect:/productos";
