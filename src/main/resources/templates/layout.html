@@ -429,12 +429,14 @@
 
     <nav class="sidebar-nav" aria-label="Navegación principal">
  
-      <!-- ── Principal (todos) ── -->
+      <!-- ── Principal ── -->
       <div class="nav-section">Principal</div>
-      <a th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
+      <!-- Dashboard: solo ADMIN -->
+      <a sec:authorize="hasRole('ADMIN')"
+         th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
         <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
       </a>
-    
+
       <!-- ── Ventas (todos) ── -->
       <a th:href="@{/ventas/nueva}" th:classappend="${activeModule == 'ventas'} ? ' active'" class="nav-item">
         <i class="ti ti-shopping-cart" aria-hidden="true"></i> Nueva venta

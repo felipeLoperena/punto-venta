@@ -40,6 +40,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
 
                 // ── Solo ADMIN ──────────────────────────────────
+                .requestMatchers("/").hasRole("ADMIN")
+                .requestMatchers("/dashboard/**").hasRole("ADMIN")
                 .requestMatchers("/usuarios/**").hasRole("ADMIN")
                 .requestMatchers("/reportes/**").hasRole("ADMIN")
 

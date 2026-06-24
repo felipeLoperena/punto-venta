@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head><title>Dashboard</title></head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  <span>Dashboard</span>
+</th:block>
+
+<th:block layout:fragment="head-extra">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Resumen general del punto de venta</p>
+    </div>
+    <a class="btn-primary" th:href="@{/ventas/nueva}">
+      <i class="ti ti-plus" aria-hidden="true"></i> Nueva venta
+    </a>
+  </div>
+
+  <!-- ── Tarjetas de métricas ── -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-receipt" aria-hidden="true"></i> Ventas de hoy</div>
+      <div class="stat-value" th:text="${resumen.ventasHoy}">0</div>
+      <div class="stat-hint">transacciones registradas hoy</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-cash" aria-hidden="true"></i> Ingresos de hoy</div>
+      <div class="stat-value"
+           th:text="'$' + ${#numbers.formatDecimal(resumen.ingresosHoy,1,'COMMA',2,'POINT')}">$0.00</div>
+      <div class="stat-hint">total cobrado en el día</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-calendar-stats" aria-hidden="true"></i> Ingresos del mes</div>
+      <div class="stat-value"
+           th:text="'$' + ${#numbers.formatDecimal(resumen.ingresosMes,1,'COMMA',2,'POINT')}">$0.00</div>
+      <div class="stat-hint">acumulado del mes en curso</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-package" aria-hidden="true"></i> Productos activos</div>
+      <div class="stat-value" th:text="${resumen.productosActivos}">0</div>
+      <div class="stat-hint">
+        <span th:if="${resumen.stockBajo > 0}" style="color:var(--danger)"
+              th:text="${resumen.stockBajo} + ' con stock bajo'">0 con stock bajo</span>
+        <span th:if="${resumen.stockBajo == 0}">catálogo en buen nivel</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Paneles inferiores ── -->
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:18px;margin-top:18px;align-items:start">
+
+    <!-- Últimas ventas -->
+    <div class="table-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">Últimas ventas</strong>
+        <a th:href="@{/ventas}" style="font-size:12px;color:var(--amber-text);text-decoration:none">Ver todas</a>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Método</th>
+            <th style="text-align:right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="v : ${resumen.ultimasVentas}">
+            <td><span class="cell-primary" th:text="'#' + ${v.id}"></span></td>
+            <td>
+              <div class="cell-primary" th:text="${#temporals.format(v.fecha,'dd/MM/yyyy')}"></div>
+              <div class="cell-secondary" th:text="${#temporals.format(v.fecha,'HH:mm')}"></div>
+            </td>
+            <td>
+              <span th:if="${v.clienteNombre != null}" th:text="${v.clienteNombre}" class="cell-primary"></span>
+              <span th:if="${v.clienteNombre == null}" style="color:var(--text-hint);font-size:12px">Sin cliente</span>
+            </td>
+            <td>
+              <span th:class="${v.metodoPago.name() == 'EFECTIVO'} ? 'badge badge-active' : 'badge badge-inactive'"
+                    th:text="${v.metodoPago.label}"></span>
+            </td>
+            <td style="text-align:right">
+              <span class="cell-number"
+                    th:text="'$' + ${#numbers.formatDecimal(v.total,1,'COMMA',2,'POINT')}"></span>
+            </td>
+          </tr>
+          <tr th:if="${resumen.ultimasVentas.isEmpty()}">
+            <td colspan="5">
+              <div class="empty-state">
+                <i class="ti ti-receipt-off" aria-hidden="true"></i>
+                <p>No hay ventas registradas aún.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Stock bajo -->
+    <div class="table-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+        <strong style="font-size:14px">Stock bajo</strong>
+        <span style="font-size:11px;color:var(--text-hint)"
+              th:text="'≤ ' + ${umbralStock} + ' uds.'">≤ 5 uds.</span>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th style="text-align:right">Stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${resumen.productosStockBajo}">
+            <td><span class="cell-primary" th:text="${p.nombre}"></span></td>
+            <td><span class="tag" th:text="${p.categoria}"></span></td>
+            <td style="text-align:right">
+              <span class="badge badge-inactive" th:text="${p.stock}"></span>
+            </td>
+          </tr>
+          <tr th:if="${resumen.productosStockBajo.isEmpty()}">
+            <td colspan="3">
+              <div class="empty-state">
+                <i class="ti ti-circle-check" aria-hidden="true"></i>
+                <p>Todo el stock está en buen nivel.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- ── Gráfica de ingresos ── -->
+  <div class="table-card" style="margin-top:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--border)">
+      <strong style="font-size:14px">Ingresos</strong>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input type="month" id="selectorMes" class="filter-btn"
+               style="cursor:auto;padding:6px 10px"/>
+        <div class="chart-toggle">
+          <button type="button" id="btnDiario"  class="chart-toggle-btn active">Diario</button>
+          <button type="button" id="btnMensual" class="chart-toggle-btn">Mensual</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px;height:320px">
+      <canvas id="graficaIngresos"></canvas>
+    </div>
+  </div>
+
+  <style>
+    .chart-toggle { display:inline-flex; border:1px solid var(--border); border-radius:var(--radius-md); overflow:hidden; }
+    .chart-toggle-btn {
+      padding:6px 14px; font-size:13px; border:none; background:var(--surface);
+      color:var(--text-muted); cursor:pointer; transition:background .1s;
+    }
+    .chart-toggle-btn + .chart-toggle-btn { border-left:1px solid var(--border); }
+    .chart-toggle-btn:hover  { background:var(--bg); }
+    .chart-toggle-btn.active { background:var(--amber); color:#fff; }
+  </style>
+
+  <script>
+    (function () {
+      const selectorMes = document.getElementById('selectorMes');
+      const btnDiario   = document.getElementById('btnDiario');
+      const btnMensual  = document.getElementById('btnMensual');
+      const ctx         = document.getElementById('graficaIngresos');
+
+      const ahora = new Date();
+      selectorMes.value = ahora.getFullYear() + '-' + String(ahora.getMonth() + 1).padStart(2, '0');
+
+      const fmtMoneda = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+      let modo = 'diario';
+      let chart = null;
+
+      function render(labels, data, etiqueta, tipo) {
+        const cfg = {
+          type: tipo,
+          data: {
+            labels: labels,
+            datasets: [{
+              label: etiqueta,
+              data: data,
+              backgroundColor: tipo === 'bar' ? 'rgba(212,168,67,0.55)' : 'rgba(212,168,67,0.15)',
+              borderColor: '#BA8F2E',
+              borderWidth: 2,
+              borderRadius: 4,
+              tension: 0.3,
+              fill: tipo === 'line',
+              pointRadius: tipo === 'line' ? 2 : 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: { callbacks: { label: (c) => fmtMoneda.format(c.parsed.y) } }
+            },
+            scales: {
+              y: { beginAtZero: true, ticks: { callback: (v) => fmtMoneda.format(v) } }
+            }
+          }
+        };
+        if (chart) {
+          chart.config.type = tipo;
+          chart.data = cfg.data;
+          chart.options = cfg.options;
+          chart.update();
+        } else {
+          chart = new Chart(ctx, cfg);
+        }
+      }
+
+      async function cargar() {
+        let url, etiqueta, tipo;
+        if (modo === 'diario') {
+          const [anio, mes] = selectorMes.value.split('-');
+          url = `/dashboard/api/ventas-diarias?anio=${anio}&mes=${mes}`;
+          etiqueta = 'Ingresos del día';
+          tipo = 'line';
+        } else {
+          url = '/dashboard/api/ventas-mensuales?meses=12';
+          etiqueta = 'Ingresos del mes';
+          tipo = 'bar';
+        }
+        const resp = await fetch(url);
+        const serie = await resp.json();
+        render(serie.labels, serie.data, etiqueta, tipo);
+      }
+
+      btnDiario.addEventListener('click', () => {
+        modo = 'diario';
+        btnDiario.classList.add('active');
+        btnMensual.classList.remove('active');
+        selectorMes.style.display = '';
+        cargar();
+      });
+      btnMensual.addEventListener('click', () => {
+        modo = 'mensual';
+        btnMensual.classList.add('active');
+        btnDiario.classList.remove('active');
+        selectorMes.style.display = 'none';
+        cargar();
+      });
+      selectorMes.addEventListener('change', () => { if (modo === 'diario') cargar(); });
+
+      cargar();
+    })();
+  </script>
+
+</th:block>
+</body>
+</html>
