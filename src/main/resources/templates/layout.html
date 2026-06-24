@@ -409,10 +409,106 @@
     }
     .empty-state i { font-size: 36px; color: var(--text-hint); margin-bottom: 12px; }
     .empty-state p { font-size: 14px; }
+
+    /* ─── AUTOCOMPLETE (filtro por prefijo) ───────────────────── */
+    .ac-wrap { position: relative; }
+    .ac-list {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-md); margin-top: 4px; padding: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.10); max-height: 220px; overflow-y: auto;
+    }
+    .ac-item {
+      padding: 8px 10px; font-size: 13px; cursor: pointer;
+      border-radius: var(--radius-sm); color: var(--text);
+    }
+    .ac-item:hover, .ac-item.ac-active { background: var(--bg); }
+    .ac-item b { color: var(--amber-text); font-weight: 600; }
+    .ac-hidden { display: none; }
   </style>
 
   <!-- Slot para estilos adicionales por módulo -->
   <th:block layout:fragment="head-extra"></th:block>
+
+  <!-- Autocompletado reutilizable: filtra por prefijo (izquierda → derecha),
+       sugiere coincidencias y permite escribir un valor libre. -->
+  <script>
+    function attachAutocomplete(input, options) {
+      if (!input) return;
+      const opts = options || [];
+
+      const wrap = document.createElement('div');
+      wrap.className = 'ac-wrap';
+      input.parentNode.insertBefore(wrap, input);
+      wrap.appendChild(input);
+
+      const list = document.createElement('div');
+      list.className = 'ac-list ac-hidden';
+      wrap.appendChild(list);
+
+      let activeIdx = -1;
+
+      const esc = (s) => s.replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+      function hide() { list.classList.add('ac-hidden'); activeIdx = -1; }
+      function items() { return Array.from(list.querySelectorAll('.ac-item')); }
+
+      function render(matches, q) {
+        list.innerHTML = '';
+        if (matches.length === 0) { hide(); return; }
+        matches.forEach((m) => {
+          const item = document.createElement('div');
+          item.className = 'ac-item';
+          // Resalta el prefijo escrito
+          item.innerHTML = '<b>' + esc(m.slice(0, q.length)) + '</b>' + esc(m.slice(q.length));
+          item.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            input.value = m;
+            hide();
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          });
+          list.appendChild(item);
+        });
+        list.classList.remove('ac-hidden');
+        activeIdx = -1;
+      }
+
+      function filter() {
+        const q = input.value.trim().toLowerCase();
+        if (!q) { hide(); return; }
+        const matches = opts
+          .filter((o) => o.toLowerCase().startsWith(q))
+          .slice(0, 8);
+        render(matches, q);
+      }
+
+      function setActive(idx) {
+        const its = items();
+        its.forEach((x) => x.classList.remove('ac-active'));
+        if (idx >= 0 && idx < its.length) {
+          its[idx].classList.add('ac-active');
+          its[idx].scrollIntoView({ block: 'nearest' });
+        }
+        activeIdx = idx;
+      }
+
+      input.addEventListener('input', filter);
+      input.addEventListener('focus', filter);
+      input.addEventListener('blur', () => setTimeout(hide, 120));
+      input.addEventListener('keydown', (e) => {
+        const its = items();
+        if (list.classList.contains('ac-hidden') || its.length === 0) return;
+        if (e.key === 'ArrowDown') { e.preventDefault(); setActive(Math.min(activeIdx + 1, its.length - 1)); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(Math.max(activeIdx - 1, 0)); }
+        else if (e.key === 'Enter' && activeIdx >= 0) {
+          e.preventDefault();
+          input.value = its[activeIdx].textContent;
+          hide();
+        } else if (e.key === 'Escape') { hide(); }
+      });
+    }
+  </script>
 </head>
 
 <body>
@@ -429,12 +525,14 @@
 
     <nav class="sidebar-nav" aria-label="Navegación principal">
  
-      <!-- ── Principal (todos) ── -->
+      <!-- ── Principal ── -->
       <div class="nav-section">Principal</div>
-      <a th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
+      <!-- Dashboard: solo ADMIN -->
+      <a sec:authorize="hasRole('ADMIN')"
+         th:href="@{/}" th:classappend="${activeModule == 'dashboard'} ? ' active'" class="nav-item">
         <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
       </a>
-    
+
       <!-- ── Ventas (todos) ── -->
       <a th:href="@{/ventas/nueva}" th:classappend="${activeModule == 'ventas'} ? ' active'" class="nav-item">
         <i class="ti ti-shopping-cart" aria-hidden="true"></i> Nueva venta

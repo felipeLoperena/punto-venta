@@ -29,6 +29,11 @@ public class ProductoService{
                                  .orElseThrow(() -> new NoSuchElementException("Producto no encontrado: "+id));
     }
 
+    /** Categorías existentes para sugerir en el formulario. */
+    public java.util.List<String> categorias() {
+        return productoRepository.findCategorias();
+    }
+
     public Producto crear(Producto p) {
         p.setId(null);
         return productoRepository.save(p);

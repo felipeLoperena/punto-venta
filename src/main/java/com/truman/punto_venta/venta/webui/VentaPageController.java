@@ -1,5 +1,6 @@
 package com.truman.punto_venta.venta.webui;
 
+import com.truman.punto_venta.cliente.service.ClienteService;
 import com.truman.punto_venta.producto.service.ProductoService;
 import com.truman.punto_venta.venta.domain.MetodoPago;
 import com.truman.punto_venta.venta.domain.Venta;
@@ -20,11 +21,14 @@ public class VentaPageController {
 
     private final VentaService   ventaService;
     private final ProductoService productoService;
+    private final ClienteService  clienteService;
 
     public VentaPageController(VentaService ventaService,
-                                ProductoService productoService) {
+                                ProductoService productoService,
+                                ClienteService clienteService) {
         this.ventaService    = ventaService;
         this.productoService = productoService;
+        this.clienteService  = clienteService;
     }
 
     // ── Historial ────────────────────────────────────────────────
@@ -57,6 +61,7 @@ public class VentaPageController {
         model.addAttribute("productos",    productoService.listar(null,
                 Pageable.unpaged()).getContent());
         model.addAttribute("metodosPago",  MetodoPago.values());
+        model.addAttribute("clientes",     clienteService.nombresActivos());
         model.addAttribute("activeModule", "ventas");
         return "ventas/caja";
     }
