@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="es">
+<head>
+  <title th:text="${modo == 'crear' ? 'Crear cliente' : 'Editar cliente'}">Cliente</title>
+</head>
+
+<body>
+
+  <th:block layout:fragment="breadcrumb">
+    Administración &rsaquo;
+    <a th:href="@{/clientes}" style="color:inherit">Clientes</a>
+    &rsaquo;
+    <span th:text="${modo == 'crear' ? 'Nuevo' : 'Editar'}">Nuevo</span>
+  </th:block>
+
+  <th:block layout:fragment="content">
+
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" th:text="${modo == 'crear' ? 'Nuevo cliente' : 'Editar cliente'}">
+          Cliente
+        </h1>
+        <p class="page-subtitle"
+           th:text="${modo == 'crear'} ? 'Completa los datos para registrar un cliente.'
+                                       : 'Modifica los campos que necesites actualizar.'">
+        </p>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form th:action="${modo == 'crear'} ? @{/clientes/crear} : @{'/clientes/' + ${cliente.id} + '/editar'}"
+            th:object="${cliente}"
+            method="post"
+            novalidate>
+
+        <div class="form-grid">
+
+          <!-- ID (solo en edición) -->
+          <div class="form-group" th:if="${cliente.id != null}">
+            <label class="form-label">ID</label>
+            <input class="form-control" type="text" th:field="*{id}" readonly
+                   style="background:var(--bg);color:var(--text-muted);cursor:default"/>
+          </div>
+
+          <!-- Nombre -->
+          <div class="form-group full">
+            <label class="form-label" for="nombre">Nombre</label>
+            <input class="form-control" id="nombre" type="text"
+                   th:field="*{nombre}"
+                   placeholder="Ej. Juan Pérez"/>
+            <div class="form-error" th:if="${#fields.hasErrors('nombre')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{nombre}">Nombre inválido</span>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label class="form-label" for="email">Email <span style="color:var(--text-hint);font-weight:400">(opcional)</span></label>
+            <input class="form-control" id="email" type="email"
+                   th:field="*{email}"
+                   placeholder="cliente@correo.com"/>
+            <div class="form-error" th:if="${#fields.hasErrors('email')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{email}">Email inválido</span>
+            </div>
+          </div>
+
+          <!-- Teléfono -->
+          <div class="form-group">
+            <label class="form-label" for="telefono">Teléfono <span style="color:var(--text-hint);font-weight:400">(opcional)</span></label>
+            <input class="form-control" id="telefono" type="text"
+                   th:field="*{telefono}"
+                   placeholder="Ej. 555 123 4567"/>
+            <div class="form-error" th:if="${#fields.hasErrors('telefono')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{telefono}">Teléfono inválido</span>
+            </div>
+          </div>
+
+          <!-- Dirección -->
+          <div class="form-group full">
+            <label class="form-label" for="direccion">Dirección <span style="color:var(--text-hint);font-weight:400">(opcional)</span></label>
+            <input class="form-control" id="direccion" type="text"
+                   th:field="*{direccion}"
+                   placeholder="Calle, número, colonia…"/>
+            <div class="form-error" th:if="${#fields.hasErrors('direccion')}">
+              <i class="ti ti-alert-circle" aria-hidden="true"></i>
+              <span th:errors="*{direccion}">Dirección inválida</span>
+            </div>
+          </div>
+
+          <!-- Activo -->
+          <div class="form-group full" style="display:flex;align-items:center;gap:10px">
+            <input type="checkbox" id="activo" th:field="*{activo}"
+                   style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer"/>
+            <label for="activo" style="font-size:13px;font-weight:500;cursor:pointer;margin:0">
+              Cliente activo
+            </label>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">
+            <i class="ti ti-device-floppy" aria-hidden="true"></i>
+            <span th:text="${modo == 'crear' ? 'Crear cliente' : 'Guardar cambios'}">Guardar</span>
+          </button>
+          <a class="btn-secondary" th:href="@{/clientes}">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Volver
+          </a>
+        </div>
+
+      </form>
+    </div>
+
+  </th:block>
+</body>
+</html>
