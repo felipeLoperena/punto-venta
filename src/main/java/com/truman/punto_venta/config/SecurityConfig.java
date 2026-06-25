@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/dashboard/**").hasRole("ADMIN")
                 .requestMatchers("/usuarios/**").hasRole("ADMIN")
                 .requestMatchers("/clientes/**").hasRole("ADMIN")
+                .requestMatchers("/proveedores/**").hasRole("ADMIN")
                 .requestMatchers("/reportes/**").hasRole("ADMIN")
 
                 // ── ADMIN y CAJERO ───────────────────────────────

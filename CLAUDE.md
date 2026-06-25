@@ -39,7 +39,7 @@ Cada módulo de negocio vive en su propio paquete y sigue la misma forma:
   webui/        @Controller con rutas de página Thymeleaf
 ```
 
-Los módulos actuales son `producto`, `venta`, `usuario`, `cliente` y `dashboard`. El paquete `common/error` tiene el `GlobalExceptionHandler` para REST.
+Los módulos actuales son `producto`, `venta`, `usuario`, `cliente`, `proveedor` y `dashboard`. El paquete `common/error` tiene el `GlobalExceptionHandler` para REST.
 
 El módulo `dashboard` es solo de lectura: agrega métricas desde los repos de `venta` y `producto` (sin entidad propia). Su página vive en la raíz `/` y expone dos endpoints JSON (`/dashboard/api/ventas-diarias`, `/dashboard/api/ventas-mensuales`) que alimentan una gráfica Chart.js (CDN, cargada vía fragmento `head-extra`). Todo el dashboard (`/` y `/dashboard/**`) es solo ADMIN.
 
@@ -52,7 +52,7 @@ La vista de caja (`ventas/caja.html`) maneja el carrito en memoria del navegador
 ### Seguridad
 
 Dos roles: `ADMIN` y `CAJERO`. La autorización está centralizada en `SecurityConfig`:
-- `/` (dashboard), `/dashboard/**`, `/usuarios/**`, `/clientes/**` y `/reportes/**` → solo ADMIN
+- `/` (dashboard), `/dashboard/**`, `/usuarios/**`, `/clientes/**`, `/proveedores/**` y `/reportes/**` → solo ADMIN
 - `/ventas/**` y `/productos/**` → ADMIN o CAJERO
 
 El ítem "Dashboard" del sidebar (`layout.html`) está envuelto en `sec:authorize="hasRole('ADMIN')"` para que el CAJERO no vea un enlace que le daría 403.

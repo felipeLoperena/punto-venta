@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS proveedor (
+  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
+  nombre     VARCHAR(120) NOT NULL,
+  contacto   VARCHAR(120),
+  email      VARCHAR(120),
+  telefono   VARCHAR(20),
+  direccion  VARCHAR(160),
+  activo     TINYINT(1)   NOT NULL DEFAULT 1,
+  creado_en  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
