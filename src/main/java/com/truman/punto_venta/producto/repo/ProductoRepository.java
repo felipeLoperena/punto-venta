@@ -1,5 +1,6 @@
 package com.truman.punto_venta.producto.repo;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +26,11 @@ public interface ProductoRepository extends JpaRepository<Producto, Long>{
 
   /** Productos activos con stock bajo, los más críticos primero. */
   List<Producto> findTop5ByActivoTrueAndStockLessThanEqualOrderByStockAsc(int stock);
+
+  /** Lista completa de productos activos con stock bajo, los más críticos primero. */
+  List<Producto> findByActivoTrueAndStockLessThanEqualOrderByStockAsc(int stock);
+
+  /** Valor del inventario activo a precio de venta: suma de precio × stock. */
+  @Query("select coalesce(sum(p.precio * p.stock), 0) from Producto p where p.activo = true")
+  BigDecimal valorInventario();
 }

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      lang="es">
+<head>
+  <title>Proveedores</title>
+</head>
+
+<body>
+
+  <th:block layout:fragment="breadcrumb">
+    Administración &rsaquo; <span>Proveedores</span>
+  </th:block>
+
+  <th:block layout:fragment="content">
+
+    <!-- Flash de éxito -->
+    <div th:if="${ok}" class="flash-ok">
+      <i class="ti ti-circle-check" aria-hidden="true"></i>
+      <span th:text="${ok}">Operación realizada correctamente.</span>
+    </div>
+
+    <!-- Cabecera de página -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Proveedores</h1>
+        <p class="page-subtitle">Directorio de proveedores del negocio</p>
+      </div>
+      <a class="btn-primary" th:href="@{/proveedores/crear}">
+        <i class="ti ti-plus" aria-hidden="true"></i> Nuevo proveedor
+      </a>
+    </div>
+
+    <!-- Toolbar: búsqueda -->
+    <div class="toolbar">
+      <form th:action="@{/proveedores}" method="get" style="display:contents">
+        <div class="search-box">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" name="q" placeholder="Buscar por nombre o contacto…"
+                 th:value="${q}" aria-label="Buscar proveedor"/>
+        </div>
+        <input type="hidden" name="page" value="0"/>
+        <input type="hidden" name="size" th:value="${page.size}"/>
+        <button type="submit" class="filter-btn">
+          <i class="ti ti-search" aria-hidden="true"></i> Buscar
+        </button>
+      </form>
+      <span class="result-count"
+            th:text="${page.totalElements} + ' ' + (${page.totalElements} == 1 ? 'proveedor' : 'proveedores')">
+        0 proveedores
+      </span>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Contacto</th>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th style="text-align:right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${page.content}">
+            <td>
+              <div class="cell-primary" th:text="${p.nombre}">Nombre</div>
+              <div class="cell-secondary" th:text="'#' + ${p.id}">#001</div>
+            </td>
+            <td>
+              <span th:if="${p.contacto != null}" th:text="${p.contacto}" class="cell-primary"></span>
+              <span th:if="${p.contacto == null}" style="color:var(--text-hint);font-size:12px">—</span>
+            </td>
+            <td>
+              <span th:if="${p.email != null}" th:text="${p.email}" class="cell-primary"></span>
+              <span th:if="${p.email == null}" style="color:var(--text-hint);font-size:12px">—</span>
+            </td>
+            <td>
+              <span th:if="${p.telefono != null}" th:text="${p.telefono}" class="cell-primary"></span>
+              <span th:if="${p.telefono == null}" style="color:var(--text-hint);font-size:12px">—</span>
+            </td>
+            <td>
+              <span th:class="${p.activo} ? 'badge badge-active' : 'badge badge-inactive'"
+                    th:text="${p.activo} ? 'Activo' : 'Inactivo'">Activo</span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="action-btn" th:href="@{|/proveedores/${p.id}/editar|}" title="Editar" aria-label="Editar proveedor">
+                  <i class="ti ti-edit" aria-hidden="true"></i>
+                </a>
+                <form th:action="@{|/proveedores/${p.id}/eliminar|}" method="post" style="display:inline"
+                      onsubmit="return confirm('¿Eliminar este proveedor?')">
+                  <button type="submit" class="action-btn danger" title="Eliminar" aria-label="Eliminar proveedor">
+                    <i class="ti ti-trash" aria-hidden="true"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Estado vacío -->
+          <tr th:if="${page.content.isEmpty()}">
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="ti ti-truck-off" aria-hidden="true"></i>
+                <p>No se encontraron proveedores.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Paginación -->
+      <div class="pagination-bar" th:if="${page.totalPages > 0}">
+        <span class="pag-info"
+              th:text="'Mostrando ' + (${page.number} * ${page.size} + 1)
+                       + '–' + ${#numbers.formatInteger(T(java.lang.Math).min((${page.number}+1)*${page.size}, ${page.totalElements}), 1)}
+                       + ' de ' + ${page.totalElements} + ' proveedores'">
+          Mostrando 1–10 de 0 proveedores
+        </span>
+        <div class="pag-btns" th:if="${page.totalPages > 1}">
+          <a class="pag-btn"
+             th:classappend="${page.first} ? ' disabled'"
+             th:href="@{/proveedores(q=${q}, page=${page.number-1}, size=${page.size})}">
+            <i class="ti ti-chevron-left" aria-hidden="true" style="font-size:13px"></i>
+          </a>
+          <a class="pag-btn"
+             th:each="i : ${#numbers.sequence(0, page.totalPages-1)}"
+             th:classappend="${i == page.number} ? ' pag-active'"
+             th:text="${i + 1}"
+             th:href="@{/proveedores(q=${q}, page=${i}, size=${page.size})}">1</a>
+          <a class="pag-btn"
+             th:classappend="${page.last} ? ' disabled'"
+             th:href="@{/proveedores(q=${q}, page=${page.number+1}, size=${page.size})}">
+            <i class="ti ti-chevron-right" aria-hidden="true" style="font-size:13px"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </th:block>
+</body>
+</html>
