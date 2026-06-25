@@ -45,4 +45,43 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
             order by year(v.fecha), month(v.fecha)
             """)
     List<Object[]> ingresosPorMes(@Param("desde") LocalDateTime desde);
+
+    // ── Reportes (rango [desde, hasta) ) ─────────────────────────
+
+    /** Ingresos totales en el rango; 0 si no hay ventas. */
+    @Query("select coalesce(sum(v.total), 0) from Venta v where v.fecha >= :desde and v.fecha < :hasta")
+    BigDecimal sumTotalEntre(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
+
+    /** Cantidad de ventas en el rango. */
+    long countByFechaGreaterThanEqualAndFechaLessThan(LocalDateTime desde, LocalDateTime hasta);
+
+    /** Ventas e ingresos por día. Cada fila: [anio, mes, dia, nVentas, total]. */
+    @Query("""
+            select year(v.fecha), month(v.fecha), day(v.fecha), count(v), coalesce(sum(v.total), 0)
+            from Venta v
+            where v.fecha >= :desde and v.fecha < :hasta
+            group by year(v.fecha), month(v.fecha), day(v.fecha)
+            order by year(v.fecha), month(v.fecha), day(v.fecha)
+            """)
+    List<Object[]> ventasPorDia(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
+
+    /** Ventas e ingresos por método de pago. Cada fila: [metodoPago, nVentas, total]. */
+    @Query("""
+            select v.metodoPago, count(v), coalesce(sum(v.total), 0)
+            from Venta v
+            where v.fecha >= :desde and v.fecha < :hasta
+            group by v.metodoPago
+            order by sum(v.total) desc
+            """)
+    List<Object[]> ventasPorMetodo(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
+
+    /** Ventas e ingresos por cliente (texto libre; null = sin cliente). Cada fila: [clienteNombre, nVentas, total]. */
+    @Query("""
+            select v.clienteNombre, count(v), coalesce(sum(v.total), 0)
+            from Venta v
+            where v.fecha >= :desde and v.fecha < :hasta
+            group by v.clienteNombre
+            order by sum(v.total) desc
+            """)
+    List<Object[]> ventasPorCliente(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

@@ -39,7 +39,9 @@ Cada módulo de negocio vive en su propio paquete y sigue la misma forma:
   webui/        @Controller con rutas de página Thymeleaf
 ```
 
-Los módulos actuales son `producto`, `venta`, `usuario`, `cliente`, `proveedor` y `dashboard`. El paquete `common/error` tiene el `GlobalExceptionHandler` para REST.
+Los módulos actuales son `producto`, `venta`, `usuario`, `cliente`, `proveedor`, `dashboard` y `reporte`. El paquete `common/error` tiene el `GlobalExceptionHandler` para REST.
+
+El módulo `reporte` es solo de lectura: agrega desde los repos de `venta`, `venta_item` y `producto`. Su página (`/reportes`, solo ADMIN) acepta un rango `desde`/`hasta` (por defecto, del primer día del mes en curso a hoy) y muestra resumen del periodo, ventas por día, productos más vendidos, ventas por método de pago y por cliente, más un bloque de inventario (valor y stock bajo, independiente del periodo). Cada bloque se exporta vía `GET /reportes/export/{tipo}.csv`; para PDF se usa el diálogo de impresión del navegador (hay reglas `@media print` en la vista).
 
 El módulo `dashboard` es solo de lectura: agrega métricas desde los repos de `venta` y `producto` (sin entidad propia). Su página vive en la raíz `/` y expone dos endpoints JSON (`/dashboard/api/ventas-diarias`, `/dashboard/api/ventas-mensuales`) que alimentan una gráfica Chart.js (CDN, cargada vía fragmento `head-extra`). Todo el dashboard (`/` y `/dashboard/**`) es solo ADMIN.
 

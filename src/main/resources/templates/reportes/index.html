@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}" lang="es">
+<head><title>Reportes</title></head>
+<body>
+
+<th:block layout:fragment="breadcrumb">
+  Administración &rsaquo; <span>Reportes</span>
+</th:block>
+
+<th:block layout:fragment="head-extra">
+  <style>
+    .rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:18px; align-items:start; }
+    .rep-card-head {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:14px 16px; border-bottom:1px solid var(--border);
+    }
+    .rep-export {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:12px; color:var(--amber-text); text-decoration:none;
+      padding:4px 8px; border:1px solid var(--border); border-radius:var(--radius-md);
+    }
+    .rep-export:hover { background:var(--bg); }
+    @media (max-width: 900px) { .rep-grid { grid-template-columns:1fr; } }
+    /* Impresión / Guardar como PDF: solo el contenido del reporte */
+    @media print {
+      .sidebar, .topbar, .rep-noprint { display:none !important; }
+      .main-wrapper { margin-left:0 !important; }
+      .page-content { padding:0 !important; }
+      .table-card, .stat-card { box-shadow:none; }
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Reportes</h1>
+      <p class="page-subtitle">Análisis de ventas e inventario</p>
+    </div>
+    <button type="button" class="btn-secondary rep-noprint" onclick="window.print()">
+      <i class="ti ti-printer" aria-hidden="true"></i> Imprimir / PDF
+    </button>
+  </div>
+
+  <!-- Filtro de fechas -->
+  <div class="toolbar rep-noprint">
+    <form th:action="@{/reportes}" method="get" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label style="font-size:13px;color:var(--text-muted)">Desde
+        <input type="date" name="desde" th:value="${desde}" class="filter-btn" style="cursor:auto;margin-left:4px"/>
+      </label>
+      <label style="font-size:13px;color:var(--text-muted)">Hasta
+        <input type="date" name="hasta" th:value="${hasta}" class="filter-btn" style="cursor:auto;margin-left:4px"/>
+      </label>
+      <button type="submit" class="btn-primary">
+        <i class="ti ti-filter" aria-hidden="true"></i> Generar
+      </button>
+    </form>
+    <span class="result-count"
+          th:text="'Periodo: ' + ${#temporals.format(desde,'dd/MM/yyyy')} + ' – ' + ${#temporals.format(hasta,'dd/MM/yyyy')}">
+    </span>
+  </div>
+
+  <!-- Resumen del periodo -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-receipt" aria-hidden="true"></i> Ventas</div>
+      <div class="stat-value" th:text="${resumen.ventas}">0</div>
+      <div class="stat-hint">transacciones en el periodo</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-cash" aria-hidden="true"></i> Ingresos</div>
+      <div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(resumen.ingresos,1,'COMMA',2,'POINT')}">$0.00</div>
+      <div class="stat-hint">total cobrado</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label"><i class="ti ti-calculator" aria-hidden="true"></i> Ticket promedio</div>
+      <div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(resumen.ticketPromedio,1,'COMMA',2,'POINT')}">$0.00</div>
+      <div class="stat-hint">ingresos por venta</div>
+    </div>
+  </div>
+
+  <div class="rep-grid">
+
+    <!-- Ventas por día -->
+    <div class="table-card">
+      <div class="rep-card-head">
+        <strong style="font-size:14px">Ventas por día</strong>
+        <a class="rep-export" th:href="@{/reportes/export/ventas-dia.csv(desde=${desde},hasta=${hasta})}">
+          <i class="ti ti-download" aria-hidden="true"></i> CSV
+        </a>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Fecha</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ingresos</th></tr></thead>
+        <tbody>
+          <tr th:each="d : ${porDia}">
+            <td th:text="${#temporals.format(d.fecha,'dd/MM/yyyy')}"></td>
+            <td style="text-align:right" th:text="${d.ventas}"></td>
+            <td style="text-align:right"><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(d.ingresos,1,'COMMA',2,'POINT')}"></span></td>
+          </tr>
+          <tr th:if="${porDia.isEmpty()}"><td colspan="3"><div class="empty-state"><i class="ti ti-calendar-off"></i><p>Sin ventas en el periodo.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Productos más vendidos -->
+    <div class="table-card">
+      <div class="rep-card-head">
+        <strong style="font-size:14px">Productos más vendidos</strong>
+        <a class="rep-export" th:href="@{/reportes/export/productos.csv(desde=${desde},hasta=${hasta})}">
+          <i class="ti ti-download" aria-hidden="true"></i> CSV
+        </a>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Producto</th><th style="text-align:right">Unidades</th><th style="text-align:right">Ingresos</th></tr></thead>
+        <tbody>
+          <tr th:each="p : ${productos}">
+            <td><span class="cell-primary" th:text="${p.nombre}"></span></td>
+            <td style="text-align:right" th:text="${p.unidades}"></td>
+            <td style="text-align:right"><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(p.ingresos,1,'COMMA',2,'POINT')}"></span></td>
+          </tr>
+          <tr th:if="${productos.isEmpty()}"><td colspan="3"><div class="empty-state"><i class="ti ti-package-off"></i><p>Sin ventas en el periodo.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Por método de pago -->
+    <div class="table-card">
+      <div class="rep-card-head">
+        <strong style="font-size:14px">Por método de pago</strong>
+        <a class="rep-export" th:href="@{/reportes/export/metodos.csv(desde=${desde},hasta=${hasta})}">
+          <i class="ti ti-download" aria-hidden="true"></i> CSV
+        </a>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Método</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ingresos</th></tr></thead>
+        <tbody>
+          <tr th:each="m : ${metodos}">
+            <td th:text="${m.etiqueta}"></td>
+            <td style="text-align:right" th:text="${m.ventas}"></td>
+            <td style="text-align:right"><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(m.ingresos,1,'COMMA',2,'POINT')}"></span></td>
+          </tr>
+          <tr th:if="${metodos.isEmpty()}"><td colspan="3"><div class="empty-state"><i class="ti ti-credit-card-off"></i><p>Sin ventas en el periodo.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Por cliente -->
+    <div class="table-card">
+      <div class="rep-card-head">
+        <strong style="font-size:14px">Ventas por cliente</strong>
+        <a class="rep-export" th:href="@{/reportes/export/clientes.csv(desde=${desde},hasta=${hasta})}">
+          <i class="ti ti-download" aria-hidden="true"></i> CSV
+        </a>
+      </div>
+      <table class="data-table">
+        <thead><tr><th>Cliente</th><th style="text-align:right">Ventas</th><th style="text-align:right">Ingresos</th></tr></thead>
+        <tbody>
+          <tr th:each="c : ${clientes}">
+            <td th:text="${c.etiqueta}"></td>
+            <td style="text-align:right" th:text="${c.ventas}"></td>
+            <td style="text-align:right"><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(c.ingresos,1,'COMMA',2,'POINT')}"></span></td>
+          </tr>
+          <tr th:if="${clientes.isEmpty()}"><td colspan="3"><div class="empty-state"><i class="ti ti-users-off"></i><p>Sin ventas en el periodo.</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- Inventario (independiente del periodo) -->
+  <div class="table-card" style="margin-top:18px">
+    <div class="rep-card-head">
+      <div>
+        <strong style="font-size:14px">Inventario</strong>
+        <span style="font-size:12px;color:var(--text-hint);margin-left:8px">estado actual (no depende del periodo)</span>
+      </div>
+      <a class="rep-export" th:href="@{/reportes/export/inventario.csv}">
+        <i class="ti ti-download" aria-hidden="true"></i> CSV
+      </a>
+    </div>
+
+    <div class="stats-grid" style="margin:16px;margin-bottom:4px">
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-coins" aria-hidden="true"></i> Valor del inventario</div>
+        <div class="stat-value" th:text="'$' + ${#numbers.formatDecimal(inventario.valor,1,'COMMA',2,'POINT')}">$0.00</div>
+        <div class="stat-hint">precio × stock de productos activos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-package" aria-hidden="true"></i> Productos activos</div>
+        <div class="stat-value" th:text="${inventario.productosActivos}">0</div>
+        <div class="stat-hint">en catálogo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Stock bajo</div>
+        <div class="stat-value" th:text="${inventario.stockBajo}">0</div>
+        <div class="stat-hint" th:text="'≤ ' + ${umbralStock} + ' unidades'">≤ 5 unidades</div>
+      </div>
+    </div>
+
+    <table class="data-table">
+      <thead><tr><th>Producto</th><th>Categoría</th><th style="text-align:right">Stock</th><th style="text-align:right">Precio</th></tr></thead>
+      <tbody>
+        <tr th:each="p : ${inventario.productosStockBajo}">
+          <td><span class="cell-primary" th:text="${p.nombre}"></span></td>
+          <td><span class="tag" th:text="${p.categoria}"></span></td>
+          <td style="text-align:right"><span class="badge badge-inactive" th:text="${p.stock}"></span></td>
+          <td style="text-align:right"><span class="cell-number" th:text="'$' + ${#numbers.formatDecimal(p.precio,1,'COMMA',2,'POINT')}"></span></td>
+        </tr>
+        <tr th:if="${inventario.productosStockBajo.isEmpty()}">
+          <td colspan="4"><div class="empty-state"><i class="ti ti-circle-check"></i><p>Todo el stock está en buen nivel.</p></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</th:block>
+</body>
+</html>
